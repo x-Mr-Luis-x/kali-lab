@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0a0e18">
+<title>Kali Lab · Práctica de comandos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --top:34px; --dock:64px;
+  --accent:#2f81f7; --accent2:#6cb6ff;
+  --win:#1a1c26; --title:#232633; --border:#323850;
+  --txt:#e6e8ef; --muted:#8a93a8;
+  --term:#0b0d14;
+  --green:#4ade80; --red:#f87171; --yellow:#fbbf24; --blue:#60a5fa; --cyan:#22d3ee; --purple:#c084fc;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#05070d;color:var(--txt);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{height:100dvh}
+button{font:inherit;color:inherit}
+
+/* ---------- Barra superior ---------- */
+#topbar{position:fixed;inset:0 0 auto 0;height:var(--top);display:flex;align-items:center;justify-content:space-between;padding:0 8px;background:rgba(9,11,19,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #1d2232;z-index:3000;font-size:13px}
+.tb-group{display:flex;align-items:center;gap:2px;min-width:0}
+.tb-btn{background:none;border:0;padding:5px 9px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tb-btn:hover,.tb-btn[aria-expanded="true"]{background:#ffffff14}
+.logo{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#2f81f7,#8b5cf6);display:grid;place-items:center;flex:none}
+.logo svg{width:12px;height:12px}
+.gem-dot{width:8px;height:8px;border-radius:50%;background:#5b6378;flex:none}
+.gem-dot.on{background:var(--green);box-shadow:0 0 8px #4ade80aa}
+#clock{font-variant-numeric:tabular-nums;color:#cfd5e3}
+#appmenu{position:fixed;top:calc(var(--top) + 6px);left:8px;width:250px;background:#1b1e2b;border:1px solid var(--border);border-radius:12px;padding:6px;box-shadow:0 18px 50px #000b;z-index:3100;display:none}
+#appmenu.open{display:block}
+#appmenu .mi{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border:0;background:none;border-radius:8px;cursor:pointer;text-align:left;font-size:13.5px}
+#appmenu .mi:hover{background:#ffffff12}
+#appmenu .mi .ic{width:28px;height:28px}
+#appmenu hr{border:0;border-top:1px solid var(--border);margin:6px 4px}
+#appmenu .note{font-size:11.5px;color:var(--muted);padding:4px 10px 6px;line-height:1.4}
+
+/* ---------- Escritorio ---------- */
+#desktop{position:fixed;top:var(--top);left:0;right:0;bottom:0;overflow:hidden;
+  background:
+    radial-gradient(1100px 640px at 12% 8%, #1e3a7044, transparent 60%),
+    radial-gradient(900px 600px at 88% 92%, #5b21b644, transparent 60%),
+    radial-gradient(600px 400px at 70% 20%, #0e749033, transparent 60%),
+    linear-gradient(160deg,#070b16 0%,#0a1121 50%,#05070d 100%);}
+#desktop::before{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);mask-image:radial-gradient(ellipse at center,#000 30%,transparent 75%);pointer-events:none}
+#wm{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;user-select:none;width:90%}
+#wm .big{font-family:var(--mono);font-weight:700;font-size:clamp(34px,7vw,84px);letter-spacing:.08em;background:linear-gradient(90deg,#6cb6ff55,#c084fc55);-webkit-background-clip:text;background-clip:text;color:transparent}
+#wm .small{font-size:clamp(12px,1.6vw,15px);color:#8a93a877;letter-spacing:.3em;text-transform:uppercase;margin-top:6px}
+#icons{position:absolute;top:18px;left:18px;display:flex;flex-direction:column;gap:12px;z-index:1}
+.icon{width:100px;padding:10px 4px 8px;border-radius:12px;text-align:center;cursor:pointer;user-select:none;border:1px solid transparent;background:none;font-size:12.5px;line-height:1.25;text-shadow:0 1px 3px #000}
+.icon:hover,.icon:focus-visible{background:#ffffff10;border-color:#ffffff1c;outline:none}
+.icon .ic{width:58px;height:58px;margin:0 auto 7px}
+.ic svg{width:100%;height:100%;display:block}
+#windows{position:absolute;inset:0;z-index:2;pointer-events:none}
+#windows > *{pointer-events:auto}
+
+/* ---------- Ventanas ---------- */
+.win{position:absolute;display:flex;flex-direction:column;background:var(--win);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 70px #000c,0 0 0 1px #0007;overflow:hidden;min-width:320px;min-height:240px;resize:both;animation:pop .16s ease-out}
+@keyframes pop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.win.focused{border-color:#4b5578}
+.win.max{left:0!important;top:0!important;width:100%!important;height:calc(100% - var(--dock) - 14px)!important;border-radius:0;resize:none}
+.win.min{display:none}
+.win-title{height:38px;flex:none;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;background:var(--title);border-bottom:1px solid var(--border);cursor:grab;user-select:none;touch-action:none;font-size:13px}
+.win-title:active{cursor:grabbing}
+.win-title .wi{width:18px;height:18px;flex:none}
+.win-title .t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c9cfdf;font-weight:500}
+.wbtn{width:30px;height:28px;border-radius:7px;border:0;background:transparent;color:#a8b0c4;cursor:pointer;display:grid;place-items:center;flex:none}
+.wbtn:hover{background:#ffffff16;color:#fff}
+.wbtn.close:hover{background:#e5484d;color:#fff}
+.wbtn svg{width:14px;height:14px}
+.win-body{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* ---------- Dock ---------- */
+#dock{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:6px;background:rgba(14,17,27,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid #262c40;border-radius:16px;z-index:2500;box-shadow:0 10px 40px #0009}
+.dk{position:relative;width:46px;height:46px;border-radius:11px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;padding:5px}
+.dk:hover{background:#ffffff12}
+.dk .ic{width:36px;height:36px}
+.dk::after{content:"";position:absolute;bottom:1px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:transparent}
+.dk.open::after{background:var(--accent2)}
+.dk .tip{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);background:#0d1018;border:1px solid var(--border);padding:4px 8px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:.15s}
+.dk:hover .tip{opacity:1}
+
+/* ---------- Terminal ---------- */
+.term{flex:1;display:flex;flex-direction:column;background:var(--term);min-height:0}
+.taskbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:9px 12px;background:linear-gradient(90deg,#11203d,#1c1534);border-bottom:1px solid #26304e;font-size:13px}
+.task-main{flex:1 1 260px;min-width:0;display:flex;gap:10px;align-items:flex-start}
+.task-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:grid;place-items:center;font-size:17px;flex:none}
+.task-lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2);font-weight:700;display:flex;gap:8px;align-items:center}
+.badge{font-size:10px;padding:1px 6px;border-radius:99px;background:#ffffff14;color:#cbd2e1;letter-spacing:.02em;text-transform:none;font-weight:600}
+.badge.g{background:#4ade8022;color:var(--green)}
+.task-txt{margin-top:2px;line-height:1.4;color:#f3f4f8;font-weight:500;word-break:break-word}
+.task-side{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tbtn{background:#ffffff10;border:1px solid #ffffff20;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12.5px;white-space:nowrap}
+.tbtn:hover{background:#ffffff1c}
+.score{display:flex;gap:6px;font-family:var(--mono);font-size:12.5px}
+.score span{padding:4px 8px;border-radius:8px;background:#00000040}
+.score .s-ok{color:var(--green)} .score .s-bad{color:var(--red)}
+.screen{flex:1;overflow-y:auto;padding:10px 14px 16px;font-family:var(--mono);font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;cursor:text;outline:none;scrollbar-width:thin;scrollbar-color:#2b3247 transparent}
+.screen::-webkit-scrollbar{width:9px} .screen::-webkit-scrollbar-thumb{background:#2b3247;border-radius:9px}
+.line{min-height:1.5em}
+.pl{color:#3b8eea}.pu{color:#5aa9ff;font-weight:700}.pp{color:#f1f3f8;font-weight:700}.pr{color:#ff5c5c;font-weight:700}
+.err{color:#ff7b7b}.ok{color:var(--green)}.dim{color:var(--muted)}.warn{color:var(--yellow)}.info{color:var(--cyan)}
+.c-dir{color:#5aa9ff;font-weight:700}.c-exe{color:#4ade80;font-weight:700}.c-hid{color:#9aa3b6}
+.hl{color:#ff6b6b;font-weight:700}
+.head{color:var(--accent2);font-weight:700}
+.profe{display:block;margin:8px 0 6px;padding:8px 12px;border-left:3px solid var(--yellow);background:#fbbf2412;color:#fde68a;border-radius:0 8px 8px 0;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.45}
+.profe b{color:#fff}
+.verdict{display:block;margin:6px 0;padding:7px 12px;border-radius:8px;font-family:Inter,system-ui,sans-serif;font-size:13.5px;line-height:1.45}
+.verdict.ok{background:#4ade8018;border:1px solid #4ade8040}
+.verdict.err{background:#f8717118;border:1px solid #f8717140;color:#fecaca}
+.verdict.info{background:#22d3ee14;border:1px solid #22d3ee38;color:#a5f3fc}
+.verdict.hint{background:#c084fc14;border:1px solid #c084fc38;color:#e9d5ff}
+.thinking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.inwrap .row{display:flex;align-items:baseline}
+.inwrap input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--txt);font:inherit;padding:0;margin:0;caret-color:var(--green)}
+.keys{display:none;flex:none;gap:6px;padding:7px 8px;background:#0f121c;border-top:1px solid #1e2436;overflow-x:auto;scrollbar-width:none}
+.keys::-webkit-scrollbar{display:none}
+.keys button{flex:none;min-width:42px;height:36px;padding:0 10px;border-radius:8px;border:1px solid #2a3148;background:#181c29;font-family:var(--mono);font-size:13px;cursor:pointer}
+.keys button:active{background:#262c40}
+.keys .k-wide{min-width:64px}
+.keys .k-red{color:#fca5a5}
+
+/* ---------- Editor de texto ---------- */
+.editor{flex:1;display:flex;flex-direction:column;min-height:0;background:#1e2030}
+.menubar{flex:none;display:flex;gap:2px;padding:3px 6px;background:#232637;border-bottom:1px solid var(--border);font-size:12.5px;color:#b8bfd0;overflow-x:auto;align-items:center}
+.menubar span{padding:3px 8px;border-radius:5px;white-space:nowrap}
+.menubar .sp{flex:1}
+.menubar button{background:#ffffff10;border:1px solid #ffffff1c;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:12px;white-space:nowrap}
+.menubar button:hover{background:#ffffff1c}
+.edwrap{flex:1;min-height:0;display:flex;overflow:auto;font-family:var(--mono);font-size:var(--edfs,13.5px);line-height:1.55}
+.gutter{flex:none;padding:10px 10px 10px 8px;text-align:right;color:#565e78;user-select:none;background:#1a1c2a;border-right:1px solid #2a2e42;white-space:pre}
+.edtext{flex:1;margin:0;padding:10px 14px;white-space:pre-wrap;word-break:break-word;color:#e3e6ee;outline:none;border:0;background:transparent;font:inherit;resize:none;min-width:0}
+textarea.edtext{white-space:pre;overflow:hidden}
+.status{flex:none;display:flex;justify-content:space-between;gap:10px;padding:4px 10px;font-size:11.5px;color:var(--muted);background:#191b28;border-top:1px solid var(--border)}
+
+/* ---------- Ajustes ---------- */
+.settings{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px;font-size:14px;line-height:1.5}
+.settings h2{margin:0;font-size:18px}
+.settings p{margin:0;color:#b9c0d0}
+.settings label{display:block;font-size:12.5px;font-weight:600;color:#cdd3e2;margin-bottom:6px}
+.settings input{width:100%;padding:11px 12px;border-radius:9px;border:1px solid var(--border);background:#11131c;color:var(--txt);font:inherit;font-family:var(--mono);font-size:14px;outline:none}
+.settings input:focus{border-color:var(--accent)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:10px 14px;border-radius:9px;border:1px solid #ffffff22;background:#ffffff10;cursor:pointer;font-weight:600;font-size:13.5px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{filter:brightness(1.12)}
+.card{padding:12px 14px;border-radius:10px;background:#11131c;border:1px solid var(--border);font-size:13px;color:#aeb6c8}
+.card a{color:var(--accent2)}
+.state{font-size:13px;font-weight:600}
+.state.on{color:var(--green)} .state.off{color:var(--muted)}
+
+/* ---------- Diálogos Zenity ---------- */
+.zen-ov{position:absolute;inset:0;display:grid;place-items:center;background:#0008;z-index:99999;padding:14px;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.zen{width:min(400px,100%);background:#2b2e3b;border:1px solid #474e66;border-radius:12px;box-shadow:0 24px 60px #000c;overflow:hidden;font-size:14px;animation:pop .16s ease-out}
+.zen-t{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#33374a;font-size:13px;font-weight:600;color:#dfe3ee}
+.zen-t small{font-weight:500;color:var(--muted);font-size:11px}
+.zen-b{padding:18px 18px 8px;display:flex;gap:14px;align-items:flex-start}
+.zen-ico{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:22px;flex:none;background:#ffffff12}
+.zen-c{flex:1;min-width:0;line-height:1.45;word-break:break-word}
+.zen-c input{width:100%;margin-top:10px;padding:9px 10px;border-radius:7px;border:1px solid #4b5370;background:#1d1f2a;color:var(--txt);font:inherit;outline:none}
+.zen-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px 14px}
+.zen-f button{padding:8px 16px;border-radius:8px;border:1px solid #ffffff26;background:#ffffff12;cursor:pointer;font-weight:600}
+.zen-f button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.zen-f button:disabled{opacity:.45;cursor:default}
+.zbar{height:12px;border-radius:9px;background:#1b1d27;margin-top:12px;overflow:hidden;border:1px solid #444b63}
+.zbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f81f7,#6cb6ff);transition:width .1s linear}
+.zlist{margin-top:10px;max-height:220px;overflow:auto;border:1px solid #444b63;border-radius:8px}
+.zlist table{width:100%;border-collapse:collapse;font-size:13px}
+.zlist th{text-align:left;padding:6px 10px;background:#33374a;position:sticky;top:0;font-weight:600}
+.zlist td{padding:7px 10px;border-top:1px solid #383d52;cursor:pointer}
+.zlist tr.sel td{background:#2f81f7;color:#fff}
+
+/* ---------- Toast ---------- */
+#toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(20px);background:#141826;border:1px solid var(--border);padding:10px 16px;border-radius:12px;font-size:13.5px;box-shadow:0 12px 40px #000a;opacity:0;pointer-events:none;transition:.25s;z-index:4000;max-width:min(92vw,460px);text-align:center;line-height:1.45}
+#toast.show{opacity:1;transform:translateX(-50%)}
+
+/* ---------- Móvil ---------- */
+@media (max-width:760px){
+  :root{--dock:62px}
+  .tb-hide-m{display:none!important}
+  #icons{left:0;right:0;top:22px;flex-direction:row;justify-content:center;flex-wrap:wrap;gap:14px}
+  .icon{width:96px}
+  #wm{top:58%}
+  .win{position:absolute;left:0!important;top:0!important;width:100%!important;height:calc(100% - var(--dock))!important;border-radius:0;resize:none;border-left:0;border-right:0;min-width:0}
+  .win-title{cursor:default}
+  .wbtn.max-b{display:none}
+  #dock{left:0;right:0;bottom:0;transform:none;border-radius:0;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-left:0;border-right:0;border-bottom:0}
+  .dk .tip{display:none}
+  .keys{display:flex}
+  .screen{font-size:12px;padding:8px 10px 12px}
+  .taskbar{padding:8px 10px}
+  .task-av{width:28px;height:28px;font-size:15px}
+  #toast{bottom:auto;top:calc(var(--top) + 10px);transform:translateX(-50%) translateY(-12px)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="tb-group">
+    <button class="tb-btn" id="btnMenu" aria-expanded="false" aria-haspopup="true">
+      <span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l6 5-6 5M13 18h6"/></svg></span>
+      <span>Aplicaciones</span>
+    </button>
+    <button class="tb-btn tb-hide-m" data-open="prac">Práctica</button>
+    <button class="tb-btn tb-hide-m" data-open="term">Terminal</button>
+    <button class="tb-btn tb-hide-m" data-open="txt">comandos.txt</button>
+  </div>
+  <div class="tb-group">
+    <span class="tb-btn" id="clock" aria-live="off"></span>
+  </div>
+</div>
+
+<div id="appmenu" role="menu">
+  <button class="mi" data-open="prac"><span class="ic" data-ic="prac"></span>Práctica (con la profe)</button>
+  <button class="mi" data-open="term"><span class="ic" data-ic="term"></span>Terminal libre</button>
+  <button class="mi" data-open="txt"><span class="ic" data-ic="txt"></span>comandos.txt</button>
+  <hr>
+  <div class="note">Atajo: <b>Ctrl + Alt + T</b> abre la terminal.<br>Simulador educativo: nada de lo que escribas afecta a tu equipo.</div>
+</div>
+
+<div id="desktop">
+  <div id="wm"><div class="big">KALI LAB</div><div class="small">Práctica de comandos · Prog. VI</div></div>
+  <div id="icons">
+    <button class="icon" data-open="prac"><span class="ic" data-ic="prac"></span>Práctica</button>
+    <button class="icon" data-open="term"><span class="ic" data-ic="term"></span>Terminal</button>
+    <button class="icon" data-open="txt"><span class="ic" data-ic="txt"></span>comandos.txt</button>
+  </div>
+  <div id="windows"></div>
+</div>
+
+<div id="dock">
+  <button class="dk" data-dock="prac" aria-label="Práctica"><span class="ic" data-ic="prac"></span><span class="tip">Práctica con la profe</span></button>
+  <button class="dk" data-dock="term" aria-label="Terminal"><span class="ic" data-ic="term"></span><span class="tip">Terminal libre</span></button>
+  <button class="dk" data-dock="txt" aria-label="comandos.txt"><span class="ic" data-ic="txt"></span><span class="tip">comandos.txt</span></button>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isMobile = () => matchMedia('(max-width: 760px)').matches;
+const rand = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'html') e.innerHTML = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+}
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} },
+};
+
+const ICONS = {
+  term: `<svg viewBox="0 0 64 64"><rect x="4" y="8" width="56" height="48" rx="10" fill="#171b29" stroke="#3d4663" stroke-width="2"/><rect x="4" y="8" width="56" height="11" rx="10" fill="#353d58"/><rect x="4" y="15" width="56" height="4" fill="#353d58"/><circle cx="12" cy="13.5" r="2" fill="#ff5f57"/><circle cx="18" cy="13.5" r="2" fill="#febc2e"/><circle cx="24" cy="13.5" r="2" fill="#28c840"/><path d="M14 30l8 6-8 6" fill="none" stroke="#4ade80" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 44h14" stroke="#e6e8ef" stroke-width="3.5" stroke-linecap="round"/></svg>`,
+  txt: `<svg viewBox="0 0 64 64"><path d="M14 4h26l12 12v40a4 4 0 0 1-4 4H14a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4z" fill="#eef1f7"/><path d="M40 4v9a3 3 0 0 0 3 3h9z" fill="#c3cad9"/><rect x="17" y="26" width="28" height="3" rx="1.5" fill="#7c8aa8"/><rect x="17" y="33" width="24" height="3" rx="1.5" fill="#7c8aa8"/><rect x="17" y="40" width="28" height="3" rx="1.5" fill="#7c8aa8"/><rect x="17" y="47" width="18" height="3" rx="1.5" fill="#7c8aa8"/><rect x="10" y="12" width="20" height="9" rx="2.5" fill="#2f81f7"/><text x="20" y="19" text-anchor="middle" font-family="monospace" font-size="7" font-weight="700" fill="#fff">TXT</text></svg>`,
+  prac: `<svg viewBox="0 0 64 64"><rect x="4" y="8" width="56" height="48" rx="10" fill="#171b29" stroke="#3d4663" stroke-width="2"/><rect x="4" y="8" width="56" height="11" rx="10" fill="#353d58"/><rect x="4" y="15" width="56" height="4" fill="#353d58"/><path d="M12 30l7 5.5-7 5.5" fill="none" stroke="#4ade80" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 42h9" stroke="#e6e8ef" stroke-width="3.2" stroke-linecap="round"/><circle cx="46" cy="44" r="13" fill="#f59e0b"/><circle cx="46" cy="44" r="13" fill="none" stroke="#171b29" stroke-width="2.5"/><path d="M40 44.5l4.2 4.2L52.5 40" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+};
+function paintIcons(root = document) { $$('[data-ic]', root).forEach(n => { n.innerHTML = ICONS[n.dataset.ic] || ''; }); }
+
+function toast(msg, ms = 3200) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+/* =====================================================================
+   CONTENIDO: comandos.txt
+   ===================================================================== */
+const COMANDOS_TXT = `KALI / DEBIAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 PAQUETES
+
+🔄 sudo apt update
+   → actualiza la lista de paquetes disponibles
+
+📥 sudo apt install <paquete>
+   → instala un paquete desde los repositorios
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧭 MOVERSE ENTRE CARPETAS
+
+📍 pwd
+   → muestra la ruta del directorio actual
+
+📂 ls
+   → lista archivos y carpetas del directorio actual
+
+📋 ls -l
+   → lista en formato detallado (permisos, tamaño, fecha)
+
+👻 ls -a
+   → muestra también los archivos ocultos
+
+🚪 cd <ruta>
+   → cambia al directorio indicado
+
+⬆️ cd ..
+   → sube a la carpeta de arriba (carpeta padre)
+
+🏠 cd ~
+   → vuelve a tu carpeta personal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🗂️ ARCHIVOS Y CARPETAS
+
+📁 mkdir <carpeta>
+   → crea una nueva carpeta
+
+📄 touch <archivo>
+   → crea un archivo vacío
+
+📑 cp <origen> <destino>
+   → copia archivos  |  cp -r → copia carpetas
+
+🔀 mv <origen> <destino>
+   → mueve o renombra archivos o carpetas
+
+🗑️ rm <archivo>
+   → elimina un archivo
+
+🧨 rm -r <carpeta>
+   → elimina una carpeta con todo su contenido
+
+👀 cat <archivo>
+   → muestra el contenido de un archivo en la terminal
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔐 PERMISOS Y ADMINISTRADOR
+
+⚡ chmod +x <archivo>
+   → da permiso de ejecución (para scripts .sh)
+
+▶️ ./script.sh
+   → ejecuta un script de la carpeta actual
+
+👑 sudo <comando>
+   → ejecuta un comando con privilegios de administrador
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 RED
+
+🛰️ ip a
+   → muestra interfaces de red y direcciones IP asignadas
+
+📡 ping <host>
+   → comprueba conectividad con otro host
+
+⏱️ ping -c 4 <host>
+   → hace solo 4 pings y se detiene
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🪄 INSTALACIÓN DE ZENITY
+
+1️⃣ Verificar si ya está: zenity --version
+
+2️⃣ Actualizar repositorios: sudo apt update
+
+3️⃣ Instalar: sudo apt install zenity
+
+4️⃣ Verificar instalación: zenity --version
+
+5️⃣ Prueba simple: zenity --info --text="Prueba"
+   ✅ Si aparece un cuadro de diálogo, la instalación fue exitosa.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖼️ CUADROS DE ZENITY
+
+ℹ️ zenity --info --text="Hola"
+   → cuadro de información
+
+❌ zenity --error --text="Algo falló"
+   → cuadro de error
+
+⚠️ zenity --warning --text="Cuidado"
+   → cuadro de advertencia
+
+❓ zenity --question --text="¿Continuar?"
+   → pregunta Sí / No
+
+✍️ zenity --entry --text="Escribe tu nombre"
+   → pide que el usuario escriba algo
+
+📅 zenity --calendar
+   → muestra un calendario
+
+⏳ zenity --progress
+   → barra de progreso
+
+📋 zenity --list --column="Opciones" A B C
+   → muestra una lista
+
+📂 zenity --file-selection
+   → ventana para elegir un archivo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 ¡Ahora sí, a la práctica! 👉
+`;
+
+/* =====================================================================
+   SISTEMA DE ARCHIVOS SIMULADO
+   ===================================================================== */
+const HOME = '/home/kali';
+const D = (c = {}) => ({ t: 'd', c, mode: '755' });
+const F = (d = '', x = false) => ({ t: 'f', d, mode: x ? '755' : '644' });
+
+function makeFS() {
+  return D({
+    bin: D(), boot: D(), dev: D({ null: F('') }),
+    etc: D({
+      hostname: F('kali\n'), 'adduser.conf': F('# /etc/adduser.conf\n'), 'bash.bashrc': F('# System-wide .bashrc\n'), apt: D({ 'sources.list': F('deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\n') }),
+      passwd: F('root:x:0:0:root:/root:/usr/bin/zsh\nkali:x:1000:1000:Kali,,,:/home/kali:/usr/bin/zsh\n'),
+      shadow: F('root:*:19800:0:99999:7:::\nkali:$y$j9T$a1b2c3d4e5$Xq8ZpQ1mV7nR2sT4uW6yA0bC3dE5fG7hJ9kL1mN3pQ5:19800:0:99999:7:::\n'),
+      'os-release': F('PRETTY_NAME="Kali GNU/Linux Rolling"\nNAME="Kali GNU/Linux"\nVERSION_ID="2026.3"\nID=kali\nID_LIKE=debian\n'),
+      hosts: F('127.0.0.1\tlocalhost\n127.0.1.1\tkali\n'),
+    }),
+    home: D({
+      kali: D({
+        Desktop: D(), Documents: D({ 'apuntes.txt': F('Repasar comandos para la práctica.\nInstalar zenity.\n') }),
+        Downloads: D(), Music: D(), Pictures: D(), Public: D(), Templates: D(), Videos: D(),
+        'reporte.txt': F('Reporte de escaneo\n------------------\nHost 192.168.1.1: activo\nPuertos abiertos: 22, 80\n'),
+        'escaneo.sh': F('#!/bin/bash\necho "Escaneando la red..."\necho "Escaneo terminado"\n'),
+        'menu.sh': F('#!/bin/bash\necho "=== MENÚ ==="\necho "1) Escanear"\necho "2) Reporte"\necho "3) Salir"\n', true),
+        'log.txt': F('[INFO] inicio del sistema\n[ERROR] sin conexión\n[INFO] reintentando\n[ERROR] tiempo de espera agotado\n[INFO] conectado\n'),
+        '.zshrc': F('# ~/.zshrc: configuración de zsh\nalias ll="ls -l"\n'),
+        '.profile': F('# ~/.profile\n'),
+      }),
+    }),
+    opt: D(), root: D(), tmp: D(), srv: D(),
+    usr: D({ bin: D(), share: D(), local: D() }),
+    var: D({ log: D({ syslog: F('nov 20 10:00:01 kali systemd[1]: Started Session 1 of user kali.\nnov 20 10:00:05 kali NetworkManager: eth0 conectado\n') }) }),
+  });
+}
+
+const BASE_PKGS = ['bash', 'zsh', 'coreutils', 'sudo', 'apt', 'nano', 'iproute2', 'iputils-ping', 'findutils', 'grep'];
+const CATALOG = {
+  zenity: '4.0.1-1', nmap: '7.94+git20230807-3', htop: '3.3.0-4', git: '1:2.45.2-1', curl: '8.8.0-1',
+  wget: '1.24.5-1', vim: '2:9.1.0496-1', 'net-tools': '2.10-1', tree: '2.1.1-2', neofetch: '7.1.0-4',
+  python3: '3.12.4-1', figlet: '2.2.5-3', 'cowsay': '3.03+dfsg2-8', hydra: '9.5-1', 'john': '1.9.0-2', wireshark: '4.2.5-1',
+};
+
+const newState = mode => ({
+  fs: makeFS(), cwd: HOME, prevCwd: HOME,
+  installed: new Set(BASE_PKGS),
+  sudoOK: false, sudoHintShown: false,
+  history: [], histIdx: 0,
+  busy: false, ask: null, abort: false, zenClose: null,
+  cap: null, redir: null, vars: {}, lastCode: 0, mode,
+  task: null, taskN: 0, taskLog: [], attempts: 0,
+  queue: [], deck: [], score: { ok: 0, bad: 0, skip: 0 },
+});
+/* Dos terminales independientes: cada una con sus archivos, historial y pantalla */
+const SES = {
+  libre: { mode: 'libre', win: 'term', state: newState('libre'), T: {}, root: null, started: false },
+  practica: { mode: 'practica', win: 'prac', state: newState('practica'), T: {}, root: null, started: false },
+};
+let state = SES.libre.state;
+
+function norm(p) { const out = []; for (const s of p.split('/')) { if (!s || s === '.') continue; if (s === '..') out.pop(); else out.push(s); } return '/' + out.join('/'); }
+function resolve(p) {
+  if (p == null || p === '') return state.cwd;
+  if (p === '~' || p.startsWith('~/')) p = HOME + p.slice(1);
+  else if (!p.startsWith('/')) p = state.cwd + '/' + p;
+  return norm(p);
+}
+function getNode(abs) { if (abs === '/') return state.fs; let n = state.fs; for (const s of abs.split('/').filter(Boolean)) { if (!n || n.t !== 'd') return null; n = n.c[s]; } return n || null; }
+function splitPath(abs) { const i = abs.lastIndexOf('/'); return [abs.slice(0, i) || '/', abs.slice(i + 1)]; }
+const pretty = abs => abs === HOME ? '~' : abs.startsWith(HOME + '/') ? '~' + abs.slice(HOME.length) : abs;
+const needsRoot = dirAbs => !(dirAbs === HOME || dirAbs.startsWith(HOME + '/') || dirAbs === '/tmp' || dirAbs.startsWith('/tmp/'));
+const denyRead = (abs, ctx) => !ctx.sudo && (abs === '/etc/shadow' || abs === '/root' || abs.startsWith('/root/'));
+const isExec = n => !!n && (parseInt(n.mode[0], 8) & 1) === 1;
+const clone = n => JSON.parse(JSON.stringify(n));
+function mkdirp(abs) { let cur = ''; for (const s of abs.split('/').filter(Boolean)) { cur += '/' + s; const p = getNode(splitPath(cur)[0]); if (!p.c[s]) p.c[s] = D(); } }
+function permStr(n) { const r = n.mode.split('').map(d => { d = parseInt(d, 8); return (d & 4 ? 'r' : '-') + (d & 2 ? 'w' : '-') + (d & 1 ? 'x' : '-'); }).join(''); return (n.t === 'd' ? 'd' : '-') + r; }
+function nodeSize(n) { return n.t === 'd' ? 4096 : new Blob([n.d]).size; }
+function fecha() { const d = new Date(); const m = d.toLocaleString('en', { month: 'short' }); return `${m} ${String(d.getDate()).padStart(2)} ${d.toTimeString().slice(0, 5)}`; }
+function treeLines(abs, depth = 3, max = 90) {
+  const lines = [];
+  const walk = (a, n, d) => {
+    if (lines.length >= max) return;
+    for (const [k, c] of Object.entries(n.c).sort()) {
+      if (lines.length >= max) return;
+      const p = (a === '/' ? '' : a) + '/' + k;
+      lines.push(pretty(p) + (c.t === 'd' ? '/' : isExec(c) ? ' [ejecutable]' : ''));
+      if (c.t === 'd' && d < depth) walk(p, c, d + 1);
+    }
+  };
+  const n = getNode(abs); if (n && n.t === 'd') walk(abs, n, 1);
+  return lines;
+}
+
+/* =====================================================================
+   TERMINAL: interfaz
+   ===================================================================== */
+let T = SES.libre.T, cur = SES.libre;
+/* Cambia la terminal activa. No se cambia si la otra está ejecutando algo. */
+function activate(mode) {
+  if (cur.mode === mode) return true;
+  if (state.busy || state.ask) { toast('Espera a que termine el comando en la otra terminal (o pulsa Ctrl+C allí).'); return false; }
+  cur = SES[mode]; state = cur.state; T = cur.T; return true;
+}
+function buildTerminal() {
+  const ses = cur;
+  const act = fn => (...a) => { if (activate(ses.mode)) return fn(...a); };
+  const root = el('div', { class: 'term' });
+
+  // Barra de la profe
+  T.taskLbl = el('div', { class: 'task-lbl' });
+  T.taskTxt = el('div', { class: 'task-txt', text: 'Cargando…' });
+  T.sOk = el('span', { class: 's-ok', title: 'Aciertos' });
+  T.sBad = el('span', { class: 's-bad', title: 'Errores' });
+  const bar = T.bar = el('div', { class: 'taskbar' },
+    el('div', { class: 'task-main' }, el('div', { class: 'task-av', text: '👩‍🏫' }), el('div', { style: 'min-width:0' }, T.taskLbl, T.taskTxt)),
+    el('div', { class: 'task-side' },
+      el('div', { class: 'score' }, T.sOk, T.sBad),
+      el('button', { class: 'tbtn', onclick: act(() => metaFromButton('pista')), text: '💡 Pista' }),
+      el('button', { class: 'tbtn', onclick: act(() => metaFromButton('saltar')), text: '⏭ Saltar' }),
+    ));
+
+  // Pantalla
+  T.screen = el('div', { class: 'screen', tabindex: '0' });
+  T.p1 = el('div', { class: 'line' });
+  T.ps = el('span', { class: 'pl' });
+  T.input = el('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', enterkeyhint: 'send', 'aria-label': 'Escribe un comando' });
+  T.inwrap = el('div', { class: 'inwrap' }, T.p1, el('div', { class: 'row' }, T.ps, T.input));
+  T.screen.append(T.inwrap);
+
+  // Teclas rápidas (móvil)
+  const keys = el('div', { class: 'keys' });
+  const K = (label, fn, cls) => keys.append(el('button', { class: cls || '', type: 'button', text: label, onpointerdown: e => e.preventDefault(), onclick: act(fn) }));
+  K('Tab', () => complete(), 'k-wide');
+  K('↑', () => histMove(-1)); K('↓', () => histMove(1));
+  K('Ctrl+C', () => ctrlC(), 'k-wide k-red');
+  for (const ch of ['~', '/', '-', '.', '"', '*', '>', '&&', '|']) K(ch, () => insertText(ch));
+
+  root.append(bar, T.screen, keys);
+
+  T.input.addEventListener('keydown', e => { if (!activate(ses.mode)) { e.preventDefault(); return; } onKey(e); });
+  T.screen.addEventListener('keydown', e => { if (e.ctrlKey && (e.key === 'c' || e.key === 'C') && activate(ses.mode)) { e.preventDefault(); ctrlC(); } });
+  T.screen.addEventListener('mouseup', () => { if (!String(getSelection()) && activate(ses.mode)) focusInput(); });
+  renderPrompt(); updateScore();
+  T.root = root;
+  return root;
+}
+function scrollEnd() { T.screen.scrollTop = T.screen.scrollHeight; }
+function focusInput() { if (T.input && T.inwrap.style.display !== 'none') T.input.focus({ preventScroll: true }); else T.screen && T.screen.focus({ preventScroll: true }); }
+function push(node, text, isErr) {
+  if (state.redir && !isErr) { state.redir.push(text); return null; }
+  if (state.cap) state.cap.push(text);
+  T.screen.insertBefore(node, T.inwrap); scrollEnd(); return node;
+}
+function out(text = '', cls = '') { const d = el('div', { class: 'line' + (cls ? ' ' + cls : '') }); d.textContent = text; return push(d, String(text), /\berr\b/.test(cls)); }
+function outLines(text, cls) { String(text).replace(/\n$/, '').split('\n').forEach(l => out(l, cls)); }
+function outParts(parts, cls = '') { const d = el('div', { class: 'line ' + cls }); for (const p of parts) d.append(el('span', { class: p.c || '', text: p.t })); return push(d, parts.map(p => p.t).join(''), false); }
+function block(text, cls) { // mensajes de la profe (no se capturan)
+  const d = el('div', { class: cls }); d.textContent = text; T.screen.insertBefore(d, T.inwrap); scrollEnd(); return d;
+}
+function profeMsg(html) { const d = el('div', { class: 'profe', html }); T.screen.insertBefore(d, T.inwrap); scrollEnd(); return d; }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function promptParts() { return [{ t: '┌──(', c: 'pl' }, { t: 'kali㉿kali', c: 'pu' }, { t: ')-[', c: 'pl' }, { t: pretty(state.cwd), c: 'pp' }, { t: ']', c: 'pl' }]; }
+function renderPrompt() {
+  if (!T.p1) return;
+  T.p1.replaceChildren(...promptParts().map(p => el('span', { class: p.c, text: p.t })));
+  const w = WM.wins[cur.win]; if (w) w.setTitle(termTitle());
+  renderInputMode();
+}
+function renderInputMode() {
+  if (!T.inwrap) return;
+  if (state.ask) {
+    T.inwrap.style.display = ''; T.p1.style.display = 'none';
+    T.ps.textContent = state.ask.prompt; T.ps.className = '';
+    T.input.type = state.ask.pw ? 'password' : 'text';
+  } else if (state.busy) {
+    T.inwrap.style.display = 'none';
+  } else {
+    T.inwrap.style.display = ''; T.p1.style.display = '';
+    T.ps.textContent = '└─$ '; T.ps.className = 'pl'; T.input.type = 'text';
+  }
+  scrollEnd();
+}
+function echoCommand(text) {
+  const c = state.cap; state.cap = null;
+  outParts(promptParts());
+  outParts([{ t: '└─$ ', c: 'pl' }, { t: text }]);
+  state.cap = c;
+}
+function askInput(prompt, pw = false) {
+  return new Promise(resolve => { state.ask = { prompt, pw, resolve }; renderInputMode(); focusInput(); });
+}
+function insertText(t) {
+  const i = T.input, s = i.selectionStart ?? i.value.length, e = i.selectionEnd ?? s;
+  i.value = i.value.slice(0, s) + t + i.value.slice(e); i.setSelectionRange(s + t.length, s + t.length); i.focus();
+}
+function histMove(d) {
+  if (state.ask || !state.history.length) return;
+  state.histIdx = Math.max(0, Math.min(state.history.length, state.histIdx + d));
+  T.input.value = state.history[state.histIdx] ?? '';
+  requestAnimationFrame(() => T.input.setSelectionRange(T.input.value.length, T.input.value.length));
+}
+function ctrlC() {
+  if (state.ask) { const a = state.ask; state.ask = null; out(a.prompt + '^C'); a.resolve(null); return; }
+  if (state.zenClose) { state.zenClose(1, ''); }
+  if (state.busy) { state.abort = true; return; }
+  echoCommand(T.input.value + '^C'); T.input.value = '';
+}
+function onKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); onEnter(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); histMove(-1); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); histMove(1); }
+  else if (e.key === 'Tab') { e.preventDefault(); complete(); }
+  else if (e.ctrlKey && (e.key === 'c' || e.key === 'C') && !String(getSelection())) { e.preventDefault(); ctrlC(); }
+  else if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); clearScreen(); }
+}
+function onEnter() {
+  const v = T.input.value; T.input.value = '';
+  if (state.ask) { const a = state.ask; state.ask = null; out(a.prompt + (a.pw ? '' : v)); renderInputMode(); a.resolve(v); return; }
+  if (state.busy) return;
+  runLine(v);
+}
+function clearScreen() { $$('.screen > :not(.inwrap)', T.root).forEach(n => n.remove()); }
+
+/* Autocompletado con Tab */
+function availableCommands() { return Object.keys(CMDS).filter(k => !CMDS[k].pkg || state.installed.has(CMDS[k].pkg)).concat(Object.keys(META)); }
+function complete() {
+  const inp = T.input, pos = inp.selectionStart ?? inp.value.length, before = inp.value.slice(0, pos);
+  const word = before.match(/(\S*)$/)[1], start = pos - word.length;
+  const first = !before.slice(0, start).trim() || /(&&|;)\s*$/.test(before.slice(0, start));
+  let cands = [];
+  if (first && !word.includes('/')) cands = [...new Set(availableCommands())].filter(c => c.startsWith(word)).sort().map(c => c + ' ');
+  else {
+    const raw = word.replace(/^["']/, ''); const sl = raw.lastIndexOf('/');
+    const dirPart = raw.slice(0, sl + 1), base = raw.slice(sl + 1);
+    const n = getNode(resolve(dirPart || '.')); if (!n || n.t !== 'd') return;
+    cands = Object.entries(n.c).filter(([k]) => k.startsWith(base) && (base.startsWith('.') || !k.startsWith('.')))
+      .map(([k, c]) => dirPart + k + (c.t === 'd' ? '/' : ' ')).sort();
+  }
+  if (!cands.length) return;
+  let rep = cands[0];
+  if (cands.length > 1) {
+    let pre = cands[0]; for (const c of cands) while (!c.startsWith(pre)) pre = pre.slice(0, -1);
+    rep = pre;
+    if (pre.length <= word.length) { echoCommand(inp.value); out(cands.map(c => c.trim()).join('   '), 'dim'); renderInputMode(); return; }
+  }
+  inp.value = inp.value.slice(0, start) + rep + inp.value.slice(pos);
+  inp.setSelectionRange(start + rep.length, start + rep.length);
+}
+
+/* =====================================================================
+   INTÉRPRETE
+   ===================================================================== */
+/* Encuentra el paréntesis que cierra el que está en s[open] (respeta comillas). */
+function matchParen(s, open) {
+  let depth = 0, q = null;
+  for (let i = open; i < s.length; i++) {
+    const ch = s[i];
+    if (q) { if (ch === q) q = null; else if (ch === '\\' && q === '"') i++; continue; }
+    if (ch === '"' || ch === "'") { q = ch; continue; }
+    if (ch === '(') depth++;
+    else if (ch === ')') { depth--; if (!depth) return i; }
+  }
+  return s.length - 1;
+}
+/* Divide una línea en el nivel superior (fuera de comillas y paréntesis). */
+function splitTop(s, kind) {
+  const out = []; let cur = '', q = null, depth = 0;
+  const push = op => { out.push({ cmd: cur, op }); cur = ''; };
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (q) { cur += ch; if (ch === q) q = null; else if (ch === '\\' && q === '"' && i + 1 < s.length) cur += s[++i]; continue; }
+    if (ch === '"' || ch === "'") { q = ch; cur += ch; continue; }
+    if (ch === '\\' && i + 1 < s.length) { cur += ch + s[++i]; continue; }
+    if (ch === '(') { depth++; cur += ch; continue; }
+    if (ch === ')') { depth = Math.max(0, depth - 1); cur += ch; continue; }
+    if (depth === 0) {
+      if (kind === 'chain') {
+        if (ch === '&' && s[i + 1] === '&') { push('&&'); i++; continue; }
+        if (ch === '|' && s[i + 1] === '|') { push('||'); i++; continue; }
+        if (ch === ';') { push(';'); continue; }
+      } else if (kind === 'pipe') {
+        if (ch === '|' && s[i + 1] !== '|' && s[i - 1] !== '|') { push('|'); continue; }
+      }
+    }
+    cur += ch;
+  }
+  out.push({ cmd: cur, op: null });
+  return out.filter(x => x.cmd.trim());
+}
+const splitChain = s => splitTop(s, 'chain');
+
+/* Separa en palabras. Cada palabra guarda sus partes con el tipo de comillas,
+   para saber después qué se expande ($VAR, $(...), comodines) y qué no. */
+function tokenize(s) {
+  const toks = []; let parts = [], cur = '', mode = 'raw', quoted = false;
+  const pushPart = () => { if (cur) { parts.push({ t: cur, m: mode }); cur = ''; } };
+  const flush = () => { pushPart(); if (parts.length || quoted) toks.push({ parts, v: parts.map(p => p.t).join(''), q: quoted }); parts = []; quoted = false; };
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (mode === 'single') { if (ch === "'") { pushPart(); mode = 'raw'; } else cur += ch; continue; }
+    if (mode === 'double') {
+      if (ch === '"') { pushPart(); mode = 'raw'; }
+      else if (ch === '\\' && /["\\$`]/.test(s[i + 1] || '')) cur += s[++i];
+      else if (ch === '$' && s[i + 1] === '(') { const j = matchParen(s, i + 1); cur += s.slice(i, j + 1); i = j; }
+      else cur += ch;
+      continue;
+    }
+    if (ch === "'" || ch === '"') { pushPart(); mode = ch === "'" ? 'single' : 'double'; quoted = true; continue; }
+    if (ch === '\\' && i + 1 < s.length) { pushPart(); parts.push({ t: s[++i], m: 'single' }); continue; }
+    if (ch === '$' && s[i + 1] === '(') { const j = matchParen(s, i + 1); cur += s.slice(i, j + 1); i = j; continue; }
+    if (/\s/.test(ch)) { flush(); continue; }
+    if (ch === '>' || (ch === '2' && s[i + 1] === '>' && !cur && !parts.length)) {
+      const err = ch === '2'; if (err) i++;
+      flush();
+      if (s[i + 1] === '>') { toks.push({ v: '>>', op: true, err }); i++; } else toks.push({ v: '>', op: true, err });
+      continue;
+    }
+    cur += ch;
+  }
+  flush(); return toks;
+}
+function globToRe(g) { return new RegExp('^' + g.replace(/[.+^${}()[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$'); }
+
+/* ---------- variables y $(...) ---------- */
+function getVar(n) {
+  if (n === '?') return String(state.lastCode ?? 0);
+  if (n === 'HOME') return HOME;
+  if (n === 'USER' || n === 'LOGNAME') return 'kali';
+  if (n === 'PWD') return state.cwd;
+  if (n === 'SHELL') return '/usr/bin/zsh';
+  if (n === 'HOSTNAME') return 'kali';
+  if (n === 'PATH') return '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
+  return state.vars[n] ?? '';
+}
+async function cmdSubst(inner, ctx) {
+  const prev = state.redir; state.redir = [];
+  try { await runChain(inner, ctx); return state.redir.join('\n').replace(/\n+$/, ''); }
+  finally { state.redir = prev; }
+}
+async function expandVars(s, ctx) {
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch !== '$') { out += ch; continue; }
+    if (s[i + 1] === '(') { const j = matchParen(s, i + 1); out += await cmdSubst(s.slice(i + 2, j), ctx); i = j; continue; }
+    if (s[i + 1] === '{') { const j = s.indexOf('}', i); if (j > 0) { out += getVar(s.slice(i + 2, j)); i = j; continue; } }
+    const m = s.slice(i + 1).match(/^(\?|[A-Za-z_]\w*)/);
+    if (m) { out += getVar(m[1]); i += m[1].length; continue; }
+    out += ch;
+  }
+  return out;
+}
+async function expand(toks, ctx) {
+  const res = [];
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (t.op) { res.push(t.v); continue; }
+    let v = '', glob = true;
+    for (const p of t.parts) {
+      if (p.m === 'single') { v += p.t; glob = false; continue; }
+      if (p.m === 'double') glob = false;
+      v += /\$/.test(p.t) ? await expandVars(p.t, ctx) : p.t;
+    }
+    if (t.parts[0]?.m === 'raw' && (v === '~' || v.startsWith('~/'))) v = HOME + v.slice(1);
+    const prev = toks[i - 1];
+    if (glob && /[*?]/.test(v) && !(prev && /^-i?name$/.test(prev.v))) {
+      const sl = v.lastIndexOf('/'); const dirPart = v.slice(0, sl + 1), pat = v.slice(sl + 1);
+      const n = getNode(resolve(dirPart || '.'));
+      if (n && n.t === 'd' && !dirPart.includes('*')) {
+        const re = globToRe(pat);
+        const m = Object.keys(n.c).filter(k => re.test(k) && (pat.startsWith('.') || !k.startsWith('.'))).sort();
+        if (m.length) { m.forEach(k => res.push(dirPart + k)); continue; }
+      }
+    }
+    res.push(v);
+  }
+  return res;
+}
+const firstWord = s => (s.trim().match(/^\S+/) || [''])[0];
+function parseFlags(args) {
+  const flags = new Set(), rest = []; let end = false;
+  for (const a of args) {
+    if (!end && a === '--') { end = true; continue; }
+    if (!end && a.startsWith('--') && a.length > 2) flags.add(a.slice(2));
+    else if (!end && a.startsWith('-') && a.length > 1 && !/^-\d/.test(a)) for (const ch of a.slice(1)) flags.add(ch);
+    else rest.push(a);
+  }
+  return { flags, rest };
+}
+
+/* ---------- ejecución ---------- */
+async function runLine(raw) {
+  echoCommand(raw);
+  const line = raw.trim();
+  if (!line) { renderInputMode(); return; }
+  state.history.push(line); state.histIdx = state.history.length;
+  state.busy = true; state.abort = false; renderInputMode(); T.screen.focus({ preventScroll: true });
+
+  let logged = false, lastName = '', lastCode = 0;
+  try {
+    const segs = splitChain(line);
+    const name0 = firstWord(segs[0].cmd);
+    if (META[name0] && segs.length === 1) {
+      await META[name0](segs[0].cmd.trim().split(/\s+/).slice(1));
+    } else {
+      for (let i = 0; i < segs.length; i++) {
+        const prev = segs[i - 1];
+        if (prev && prev.op === '&&' && lastCode !== 0) break;
+        if (prev && prev.op === '||' && lastCode === 0) break;
+        if (state.abort) break;
+        const s = segs[i];
+        state.cap = [];
+        lastCode = await runPipeline(s.cmd, { sudo: false });
+        state.lastCode = lastCode;
+        const o = state.cap.join('\n'); state.cap = null;
+        state.taskLog.push({ cmd: s.cmd.trim(), code: lastCode, out: o.slice(0, 700) });
+        logged = true;
+        const w = s.cmd.trim().split(/\s+/);
+        lastName = w[0] === 'sudo' ? (w.find((x, j) => j > 0 && !x.startsWith('-')) || 'sudo') : w[0];
+      }
+    }
+  } catch (e) { out('error interno del simulador: ' + e.message, 'err'); console.error(e); }
+  state.cap = null; state.redir = null; state.abort = false;
+  if (logged && state.task && state.mode === 'practica') { try { await evaluar(lastName, lastCode); } catch (e) { console.error(e); } }
+  state.busy = false; renderInputMode(); focusInput();
+}
+/* Ejecuta una línea completa (con && || ;) sin registrarla: scripts, $(...) y ( ... ) */
+async function runChain(line, ctx) {
+  let code = 0;
+  const segs = splitChain(line);
+  for (let i = 0; i < segs.length; i++) {
+    const prev = segs[i - 1];
+    if (prev && prev.op === '&&' && code !== 0) break;
+    if (prev && prev.op === '||' && code === 0) break;
+    if (state.abort) return 130;
+    code = await runPipeline(segs[i].cmd, ctx);
+    state.lastCode = code;
+  }
+  return code;
+}
+/* cmd1 | cmd2 | cmd3 : la salida de uno es la entrada del siguiente */
+async function runPipeline(str, ctx) {
+  const stages = splitTop(str, 'pipe');
+  if (stages.length <= 1) return runStage(str, ctx);
+  let input = ctx.stdin ?? null, code = 0;
+  for (let i = 0; i < stages.length; i++) {
+    const last = i === stages.length - 1;
+    const c = { ...ctx, stdin: input };
+    if (last) { code = await runStage(stages[i].cmd, c); break; }
+    const prev = state.redir; state.redir = [];
+    try { code = await runStage(stages[i].cmd, c); input = state.redir.join('\n'); }
+    finally { state.redir = prev; }
+    if (state.abort) return 130;
+  }
+  return code;
+}
+async function runStage(str, ctx) {
+  const t = str.trim();
+  if (t.startsWith('(')) {
+    const j = matchParen(t, 0);
+    if (j === t.length - 1) return runChain(t.slice(1, j), ctx);
+  }
+  return runSegment(str, ctx);
+}
+async function runSegment(str, ctx) {
+  let toks = tokenize(str);
+  // Asignación de variables: nombre=valor  o  nombre=$(comando)
+  const asg = toks[0] && !toks[0].op && toks[0].parts[0]?.m === 'raw' && toks[0].parts[0].t.match(/^([A-Za-z_]\w*)=/);
+  if (asg && toks.length === 1) {
+    const name = asg[1]; state.lastCode = 0;
+    const tok = { ...toks[0], parts: [{ t: toks[0].parts[0].t.slice(name.length + 1), m: 'raw' }, ...toks[0].parts.slice(1)] };
+    const [val] = await expand([tok], ctx);
+    state.vars[name] = val ?? '';
+    return state.lastCode;
+  }
+  let redir = null;
+  const i = toks.findIndex(t => t.op);
+  if (i >= 0) {
+    const tg = toks[i + 1];
+    if (!tg || tg.op) { out("zsh: parse error near `\\n'", 'err'); return 1; }
+    const [path] = await expand([tg], ctx);
+    if (!toks[i].err) redir = { append: toks[i].v === '>>', path };
+    toks = toks.slice(0, i).concat(toks.slice(i + 2));
+    // un segundo > en la misma línea (por ejemplo  > /dev/null 2>&1) se ignora
+    const k = toks.findIndex(t => t.op); if (k >= 0) toks = toks.slice(0, k);
+  }
+  const args = (await expand(toks, ctx)).filter((a, idx) => a !== '' || toks[idx]?.q);
+  if (!args.length) return redir ? writeRedirect(redir, '') : 0;
+  if (redir) state.redir = [];
+  let code;
+  try { code = await runTokens(args, ctx); }
+  finally {
+    if (redir) { const buf = state.redir || []; state.redir = null; const w = writeRedirect(redir, buf.join('\n')); if (w) code = w; }
+  }
+  return code;
+}
+function writeRedirect(r, text) {
+  const abs = resolve(r.path);
+  if (abs === '/dev/null') return 0;
+  const [pa, nm] = splitPath(abs), p = getNode(pa), ex = getNode(abs);
+  if (!p || p.t !== 'd') { out(`zsh: no such file or directory: ${r.path}`, 'err'); return 1; }
+  if (ex && ex.t === 'd') { out(`zsh: is a directory: ${r.path}`, 'err'); return 1; }
+  if (needsRoot(pa)) { out(`zsh: permission denied: ${r.path}`, 'err'); return 1; }
+  const content = text ? text + '\n' : '';
+  if (ex && r.append) ex.d += content; else if (ex) ex.d = content; else p.c[nm] = F(content);
+  return 0;
+}
+
+async function runTokens(args, ctx) {
+  const name = args[0], rest = args.slice(1);
+  if (name.includes('/')) return execScript(name, false, ctx);
+  if (['bash', 'sh', 'zsh'].includes(name)) {
+    if (!rest[0]) { out('(En el simulador no se abre otra shell. Para ejecutar un script: bash script.sh)', 'dim'); return 0; }
+    return execScript(rest[0], true, ctx);
+  }
+  const c = CMDS[name];
+  if (c) {
+    if (c.pkg && !state.installed.has(c.pkg)) return notFound(name, c.pkg);
+    const r = await c.run(rest, ctx, name);
+    return r ?? 0;
+  }
+  if (META[name]) { out(`«${name}» es un comando de la práctica: escríbelo solo, sin otros comandos.`, 'dim'); return 1; }
+  return notFound(name);
+}
+function lev(a, b) { const m = [...Array(b.length + 1).keys()]; for (let i = 1; i <= a.length; i++) { let p = m[0]; m[0] = i; for (let j = 1; j <= b.length; j++) { const t = m[j]; m[j] = Math.min(m[j] + 1, m[j - 1] + 1, p + (a[i - 1] === b[j - 1] ? 0 : 1)); p = t; } } return m[b.length]; }
+function notFound(name, pkg) {
+  if (pkg) {
+    out(`Command '${name}' not found, but can be installed with:`, 'err');
+    out(`sudo apt install ${pkg}`, 'warn');
+    return 127;
+  }
+  out(`zsh: command not found: ${name}`, 'err');
+  const sug = Object.keys(CMDS).filter(c => lev(c, name) <= (name.length > 3 ? 2 : 1)).sort((a, b) => lev(a, name) - lev(b, name))[0];
+  if (sug) note(`¿Quisiste decir «${sug}»?`);
+  return 127;
+}
+const CONTROL = /^\s*(if|then|elif|else|fi|case|esac|for|while|until|do|done|function)\b|^\s*[^\s#]+\)\s*$|;;\s*$/m;
+async function execScript(path, viaShell, ctx) {
+  const abs = resolve(path), n = getNode(abs);
+  if (!n) { out(`zsh: no such file or directory: ${path}`, 'err'); return 127; }
+  if (n.t === 'd') { out(`zsh: is a directory: ${path}`, 'err'); return 126; }
+  if (denyRead(abs, ctx)) { out(`zsh: permission denied: ${path}`, 'err'); return 126; }
+  if (!viaShell && !isExec(n)) { out(`zsh: permission denied: ${path}`, 'err'); return 126; }
+  if (CONTROL.test(n.d)) {
+    note('⚠️ Este script usa if / case / for. El simulador solo ejecuta scripts de comandos sencillos, uno por línea. Pruébalo en tu Kali real: ahí sí funciona.');
+    return 0;
+  }
+  let code = 0;
+  for (const raw of n.d.split('\n')) {
+    const l = raw.trim(); if (!l || l.startsWith('#')) continue;
+    if (state.abort) return 130;
+    code = await runChain(l, ctx);
+  }
+  return code;
+}
+async function pause(ms) { const end = Date.now() + ms; while (Date.now() < end) { if (state.abort) return false; await sleep(Math.min(60, end - Date.now())); } return !state.abort; }
+/* Nota del simulador: va a la pantalla, nunca a un archivo ni a $(...) */
+function note(text) { block(text, 'line dim'); }
+
+/* ---------- impresión de ls ---------- */
+function classFor(name, n) { return n.t === 'd' ? 'c-dir' : isExec(n) ? 'c-exe' : name.startsWith('.') ? 'c-hid' : ''; }
+function printEntries(entries, long, isDir = true) {
+  if (long) {
+    if (isDir) out('total ' + entries.length * 4);
+    const sz = Math.max(...entries.map(([, n]) => String(nodeSize(n)).length), 4);
+    for (const [name, n, owner] of entries)
+      outParts([{ t: `${permStr(n)} ${n.t === 'd' ? 2 : 1} ${owner} ${owner} ${String(nodeSize(n)).padStart(sz)} ${fecha()} ` }, { t: name, c: classFor(name, n) }]);
+  } else if (entries.length) {
+    const parts = []; entries.forEach(([name, n], i) => { if (i) parts.push({ t: '  ' }); parts.push({ t: name, c: classFor(name, n) }); });
+    outParts(parts);
+  }
+}
+const ownerOf = abs => (abs === HOME || abs.startsWith(HOME + '/') || abs.startsWith('/tmp/')) ? 'kali' : 'root';
+
+/* =====================================================================
+   COMANDOS
+   ===================================================================== */
+const CMDS = {
+  ayuda: { desc: 'muestra la ayuda del simulador', run: () => CMDS.help.run() },
+  help: { desc: 'muestra la ayuda del simulador', run() {
+    out('Comandos disponibles en el simulador:', 'head');
+    const names = Object.keys(CMDS).filter(k => k !== 'ayuda' && k !== 'help').sort();
+    out(names.join('  '));
+    out('');
+    out('Comandos de la práctica:', 'head');
+    out('tarea     → vuelve a mostrar la tarea actual');
+    out('pista     → muestra una pista');
+    out('saltar    → muestra la solución y pasa a otra tarea');
+    out('puntaje   → muestra tus aciertos y errores');
+    out('reiniciar → deja los archivos como al inicio');
+    out('');
+    out('Teclas: Tab autocompleta · ↑ ↓ historial · Ctrl+C detiene · Ctrl+L limpia', 'dim');
+    return 0;
+  }},
+  pwd: { desc: 'muestra la ruta del directorio actual', run() { out(state.cwd); return 0; } },
+  ls: { desc: 'lista archivos y carpetas', run(args, ctx) {
+    const { flags, rest } = parseFlags(args);
+    const long = flags.has('l'), all = flags.has('a') || flags.has('all');
+    const targets = rest.length ? rest : ['.'];
+    let code = 0;
+    const files = [], dirs = [];
+    for (const t of targets) {
+      const abs = resolve(t), n = getNode(abs);
+      if (!n) { out(`ls: cannot access '${t}': No such file or directory`, 'err'); code = 2; continue; }
+      if (n.t === 'f') files.push([t, n, ownerOf(abs)]); else dirs.push([t, abs, n]);
+    }
+    if (files.length) printEntries(files, long, false);
+    dirs.forEach(([t, abs, n], i) => {
+      if (denyRead(abs, ctx)) { out(`ls: cannot open directory '${t}': Permission denied`, 'err'); code = 2; return; }
+      if (targets.length > 1) { if (i || files.length) out(''); out(t + ':'); }
+      let entries = Object.entries(n.c).filter(([k]) => all || !k.startsWith('.')).sort((a, b) => a[0].localeCompare(b[0], 'es')).map(([k, c]) => [k, c, ownerOf(abs === '/' ? '/' + k : abs + '/' + k)]);
+      if (all) entries = [['.', n, ownerOf(abs)], ['..', getNode(splitPath(abs)[0]) || n, ownerOf(splitPath(abs)[0])], ...entries];
+      printEntries(entries, long);
+    });
+    return code;
+  }},
+  ll: { desc: 'alias de ls -l', run: (args, ctx) => CMDS.ls.run(['-l', ...args], ctx) },
+  cd: { desc: 'cambia de directorio', run(args, ctx) {
+    let t = args[0];
+    if (args.length > 1) { out('cd: too many arguments', 'err'); return 1; }
+    if (t === undefined || t === '~') t = HOME;
+    if (t === '-') { t = state.prevCwd; out(pretty(t)); }
+    const abs = resolve(t), n = getNode(abs);
+    if (!n) { out(`cd: no such file or directory: ${args[0]}`, 'err'); return 1; }
+    if (n.t !== 'd') { out(`cd: not a directory: ${args[0]}`, 'err'); return 1; }
+    if (denyRead(abs, ctx)) { out(`cd: permission denied: ${args[0]}`, 'err'); return 1; }
+    state.prevCwd = state.cwd; state.cwd = abs; renderPrompt(); return 0;
+  }},
+  mkdir: { desc: 'crea carpetas (-p crea carpetas anidadas)', run(args, ctx) {
+    const { flags, rest } = parseFlags(args);
+    if (!rest.length) { out('mkdir: missing operand', 'err'); out("Try 'mkdir --help' for more information.", 'dim'); return 1; }
+    let code = 0;
+    for (const t of rest) {
+      const abs = resolve(t);
+      if (flags.has('p')) {
+        let cur = '';
+        for (const s of abs.split('/').filter(Boolean)) {
+          cur += '/' + s; const n = getNode(cur);
+          if (n) { if (n.t !== 'd') { out(`mkdir: cannot create directory '${t}': Not a directory`, 'err'); code = 1; break; } continue; }
+          const [pa] = splitPath(cur);
+          if (needsRoot(pa) && !ctx.sudo) { out(`mkdir: cannot create directory '${t}': Permission denied`, 'err'); code = 1; break; }
+          getNode(pa).c[s] = D();
+        }
+        continue;
+      }
+      const [pa, nm] = splitPath(abs), p = getNode(pa);
+      if (getNode(abs)) { out(`mkdir: cannot create directory '${t}': File exists`, 'err'); code = 1; continue; }
+      if (!p || p.t !== 'd') { out(`mkdir: cannot create directory '${t}': No such file or directory`, 'err'); code = 1; continue; }
+      if (needsRoot(pa) && !ctx.sudo) { out(`mkdir: cannot create directory '${t}': Permission denied`, 'err'); code = 1; continue; }
+      p.c[nm] = D();
+    }
+    return code;
+  }},
+  touch: { desc: 'crea un archivo vacío', run(args, ctx) {
+    if (!args.length) { out('touch: missing file operand', 'err'); return 1; }
+    let code = 0;
+    for (const t of args) {
+      const abs = resolve(t), [pa, nm] = splitPath(abs), p = getNode(pa);
+      if (getNode(abs)) continue;
+      if (!p || p.t !== 'd') { out(`touch: cannot touch '${t}': No such file or directory`, 'err'); code = 1; continue; }
+      if (needsRoot(pa) && !ctx.sudo) { out(`touch: cannot touch '${t}': Permission denied`, 'err'); code = 1; continue; }
+      p.c[nm] = F('');
+    }
+    return code;
+  }},
+  cat: { desc: 'muestra el contenido de un archivo', run(args, ctx) {
+    const { rest } = parseFlags(args);
+    if (!rest.length) { if (ctx.stdin != null) { if (ctx.stdin) outLines(ctx.stdin); return 0; } note('(En el simulador, cat necesita un archivo. Ejemplo: cat reporte.txt)'); return 1; }
+    let code = 0;
+    for (const t of rest) {
+      const abs = resolve(t), n = getNode(abs);
+      if (!n) { out(`cat: ${t}: No such file or directory`, 'err'); code = 1; continue; }
+      if (n.t === 'd') { out(`cat: ${t}: Is a directory`, 'err'); code = 1; continue; }
+      if (denyRead(abs, ctx)) { out(`cat: ${t}: Permission denied`, 'err'); code = 1; continue; }
+      if (n.d) outLines(n.d);
+    }
+    return code;
+  }},
+  printf: { desc: 'muestra un texto con formato', run(args) { if (!args.length) { out('printf: usage: printf format [arguments]', 'err'); return 2; } const t = args[0].replace(/%s/g, () => args.splice(1, 1)[0] ?? '').replace(/\\n/g, '\n').replace(/\\t/g, '\t'); if (t.replace(/\n$/, '')) outLines(t); return 0; } },
+  echo: { desc: 'muestra un texto (con > lo guarda en un archivo)', run(args) { const a = args[0] === '-e' || args[0] === '-n' ? args.slice(1) : args; out(a.join(' ')); return 0; } },
+  cp: { desc: 'copia archivos (-r para carpetas)', run(args, ctx) {
+    const { flags, rest } = parseFlags(args); const rec = flags.has('r') || flags.has('R') || flags.has('a');
+    if (rest.length < 2) { out(rest.length ? `cp: missing destination file operand after '${rest[0]}'` : 'cp: missing file operand', 'err'); return 1; }
+    const dest = rest.pop(), dAbs = resolve(dest), dn = getNode(dAbs);
+    if (rest.length > 1 && (!dn || dn.t !== 'd')) { out(`cp: target '${dest}': Not a directory`, 'err'); return 1; }
+    let code = 0;
+    for (const s of rest) {
+      const sAbs = resolve(s), sn = getNode(sAbs);
+      if (!sn) { out(`cp: cannot stat '${s}': No such file or directory`, 'err'); code = 1; continue; }
+      if (denyRead(sAbs, ctx)) { out(`cp: cannot open '${s}' for reading: Permission denied`, 'err'); code = 1; continue; }
+      if (sn.t === 'd' && !rec) { out(`cp: -r not specified; omitting directory '${s}'`, 'err'); code = 1; continue; }
+      const target = dn && dn.t === 'd' ? norm(dAbs + '/' + splitPath(sAbs)[1]) : dAbs;
+      if (target === sAbs) { out(`cp: '${s}' and '${dest}' are the same file`, 'err'); code = 1; continue; }
+      if (sn.t === 'd' && (target + '/').startsWith(sAbs + '/')) { out(`cp: cannot copy a directory, '${s}', into itself`, 'err'); code = 1; continue; }
+      const [tp, tn] = splitPath(target), tpn = getNode(tp);
+      if (!tpn || tpn.t !== 'd') { out(`cp: cannot create regular file '${dest}': No such file or directory`, 'err'); code = 1; continue; }
+      if (needsRoot(tp) && !ctx.sudo) { out(`cp: cannot create regular file '${dest}': Permission denied`, 'err'); code = 1; continue; }
+      const ex = tpn.c[tn];
+      if (ex && ex.t === 'd' && sn.t === 'f') { out(`cp: cannot overwrite directory '${dest}' with non-directory`, 'err'); code = 1; continue; }
+      tpn.c[tn] = clone(sn);
+    }
+    return code;
+  }},
+  mv: { desc: 'mueve o renombra archivos y carpetas', run(args, ctx) {
+    const { rest } = parseFlags(args);
+    if (rest.length < 2) { out(rest.length ? `mv: missing destination file operand after '${rest[0]}'` : 'mv: missing file operand', 'err'); return 1; }
+    const dest = rest.pop(), dAbs = resolve(dest), dn = getNode(dAbs);
+    if (rest.length > 1 && (!dn || dn.t !== 'd')) { out(`mv: target '${dest}': Not a directory`, 'err'); return 1; }
+    let code = 0;
+    for (const s of rest) {
+      const sAbs = resolve(s), sn = getNode(sAbs);
+      if (!sn) { out(`mv: cannot stat '${s}': No such file or directory`, 'err'); code = 1; continue; }
+      const target = dn && dn.t === 'd' ? norm(dAbs + '/' + splitPath(sAbs)[1]) : dAbs;
+      if (target === sAbs) continue;
+      if (sn.t === 'd' && (target + '/').startsWith(sAbs + '/')) { out(`mv: cannot move '${s}' to a subdirectory of itself`, 'err'); code = 1; continue; }
+      const [sp, snm] = splitPath(sAbs), [tp, tn] = splitPath(target), tpn = getNode(tp);
+      if (!tpn || tpn.t !== 'd') { out(`mv: cannot move '${s}' to '${dest}': No such file or directory`, 'err'); code = 1; continue; }
+      if ((needsRoot(sp) || needsRoot(tp)) && !ctx.sudo) { out(`mv: cannot move '${s}' to '${dest}': Permission denied`, 'err'); code = 1; continue; }
+      const ex = tpn.c[tn];
+      if (ex && ex.t === 'd' && sn.t === 'f') { out(`mv: cannot overwrite directory '${dest}' with non-directory`, 'err'); code = 1; continue; }
+      tpn.c[tn] = sn; delete getNode(sp).c[snm];
+      if ((state.cwd + '/').startsWith(sAbs + '/')) { state.cwd = target + state.cwd.slice(sAbs.length); renderPrompt(); }
+    }
+    return code;
+  }},
+  rm: { desc: 'elimina archivos (-r para carpetas)', run(args, ctx) {
+    const { flags, rest } = parseFlags(args); const rec = flags.has('r') || flags.has('R'), force = flags.has('f');
+    if (!rest.length) { if (force) return 0; out('rm: missing operand', 'err'); return 1; }
+    let code = 0;
+    for (const t of rest) {
+      const abs = resolve(t), n = getNode(abs);
+      if (abs === '/' || abs === HOME || abs === '/home') { out(`rm: it is dangerous to operate recursively on '${t}'`, 'err'); out('rm: use --no-preserve-root to override this failsafe (en el simulador no se permite 😉)', 'dim'); code = 1; continue; }
+      if (!n) { if (!force) { out(`rm: cannot remove '${t}': No such file or directory`, 'err'); code = 1; } continue; }
+      if (n.t === 'd' && !rec) { out(`rm: cannot remove '${t}': Is a directory`, 'err'); code = 1; continue; }
+      const [pa, nm] = splitPath(abs);
+      if (needsRoot(pa) && !ctx.sudo) { out(`rm: cannot remove '${t}': Permission denied`, 'err'); code = 1; continue; }
+      delete getNode(pa).c[nm];
+      if ((state.cwd + '/').startsWith(abs + '/')) { state.cwd = pa; renderPrompt(); }
+    }
+    return code;
+  }},
+  rmdir: { desc: 'elimina carpetas vacías', run(args, ctx) {
+    if (!args.length) { out('rmdir: missing operand', 'err'); return 1; }
+    let code = 0;
+    for (const t of args) {
+      const abs = resolve(t), n = getNode(abs);
+      if (!n) { out(`rmdir: failed to remove '${t}': No such file or directory`, 'err'); code = 1; continue; }
+      if (n.t !== 'd') { out(`rmdir: failed to remove '${t}': Not a directory`, 'err'); code = 1; continue; }
+      if (Object.keys(n.c).length) { out(`rmdir: failed to remove '${t}': Directory not empty`, 'err'); code = 1; continue; }
+      const [pa, nm] = splitPath(abs);
+      if (needsRoot(pa) && !ctx.sudo) { out(`rmdir: failed to remove '${t}': Permission denied`, 'err'); code = 1; continue; }
+      delete getNode(pa).c[nm];
+    }
+    return code;
+  }},
+  chmod: { desc: 'cambia permisos (chmod +x archivo)', run(args, ctx) {
+    const { rest } = parseFlags(args.filter(a => !/^[ugoa]*[+-][rwx]+$/.test(a) && !/^-[rwx]+$/.test(a)));
+    const mode = args.find(a => /^[ugoa]*[+-][rwx]+$/.test(a) || /^[0-7]{3,4}$/.test(a) || /^-[rwx]+$/.test(a));
+    const files = rest.filter(a => a !== mode);
+    if (!mode) { out(files.length ? `chmod: invalid mode: '${files[0]}'` : 'chmod: missing operand', 'err'); return 1; }
+    if (!files.length) { out(`chmod: missing operand after '${mode}'`, 'err'); return 1; }
+    let code = 0;
+    for (const t of files) {
+      const abs = resolve(t), n = getNode(abs);
+      if (!n) { out(`chmod: cannot access '${t}': No such file or directory`, 'err'); code = 1; continue; }
+      if (needsRoot(splitPath(abs)[0]) && !ctx.sudo) { out(`chmod: changing permissions of '${t}': Operation not permitted`, 'err'); code = 1; continue; }
+      if (/^[0-7]{3,4}$/.test(mode)) { n.mode = mode.slice(-3); continue; }
+      const m = mode.match(/^([ugoa]*)([+-])([rwx]+)$/);
+      const who = m[1] || 'a', add = m[2] === '+';
+      const bit = (m[3].includes('r') ? 4 : 0) | (m[3].includes('w') ? 2 : 0) | (m[3].includes('x') ? 1 : 0);
+      const idx = [...new Set(who.replace('a', 'ugo').split(''))].map(c => 'ugo'.indexOf(c));
+      const d = n.mode.split('').map(x => parseInt(x, 8));
+      for (const i of idx) d[i] = add ? (d[i] | bit) : (d[i] & ~bit);
+      n.mode = d.join('');
+    }
+    return code;
+  }},
+  sudo: { desc: 'ejecuta un comando como administrador', async run(args, ctx) {
+    const { rest } = { rest: args.filter((a, i) => !(i === 0 && /^-[EHk]$/.test(a))) };
+    if (!rest.length) { out('usage: sudo command', 'err'); return 1; }
+    if (['su', '-i', '-s'].includes(rest[0])) { out('(En el simulador no se abre una sesión de root; escribe sudo antes de cada comando.)', 'dim'); return 1; }
+    if (!state.sudoOK) {
+      if (!state.sudoHintShown) { out('(Simulador: escribe cualquier contraseña y presiona Enter. En Kali la contraseña por defecto es kali.)', 'dim'); state.sudoHintShown = true; }
+      for (let i = 0; i < 3; i++) {
+        const pw = await askInput('[sudo] password for kali: ', true);
+        if (pw === null) return 130;
+        if (pw.length) { state.sudoOK = true; break; }
+        out('Sorry, try again.', 'err');
+      }
+      if (!state.sudoOK) { out('sudo: 3 incorrect password attempts', 'err'); return 1; }
+    }
+    return runTokens(rest, { ...ctx, sudo: true });
+  }},
+  apt: { desc: 'gestor de paquetes (update, install, remove)', run: (a, c) => apt(a, c) },
+  'apt-get': { desc: 'gestor de paquetes (update, install, remove)', run: (a, c) => apt(a, c) },
+  ip: { desc: 'muestra información de red (ip a)', run(args) {
+    const only4 = args.includes('-4'); const a = args.filter(x => !x.startsWith('-'));
+    const s = a[0] || '';
+    if (['a', 'addr', 'address'].includes(s)) {
+      const dev = a[1] === 'show' ? a[2] : a[1];
+      const lo = ['1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000', '    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00', '    inet 127.0.0.1/8 scope host lo', '       valid_lft forever preferred_lft forever', '    inet6 ::1/128 scope host noprefixroute', '       valid_lft forever preferred_lft forever'];
+      const eth = ['2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000', '    link/ether 08:00:27:4e:66:a1 brd ff:ff:ff:ff:ff:ff', '    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic noprefixroute eth0', '       valid_lft 85974sec preferred_lft 85974sec', '    inet6 fd00::a00:27ff:fe4e:66a1/64 scope global dynamic mngtmpaddr noprefixroute', '       valid_lft 86034sec preferred_lft 14434sec'];
+      if (dev && !['lo', 'eth0'].includes(dev)) { out(`Device "${dev}" does not exist.`, 'err'); return 1; }
+      let lines = dev === 'lo' ? lo : dev === 'eth0' ? eth : lo.concat(eth);
+      if (only4) { const r = []; for (let i = 0; i < lines.length; i++) { if (/^\s+inet6/.test(lines[i])) { i++; continue; } if (/^\s+link\//.test(lines[i])) continue; r.push(lines[i]); } lines = r; }
+      lines.forEach(l => out(l));
+      return 0;
+    }
+    if (['r', 'route'].includes(s)) { outLines('default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100\n10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100'); return 0; }
+    if (['l', 'link'].includes(s)) { outLines('1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 state UNKNOWN\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 state UP'); return 0; }
+    out('Usage: ip [ OPTIONS ] OBJECT { COMMAND | help }', 'err'); out('where  OBJECT := { address (a) | route (r) | link (l) }', 'dim'); return 1;
+  }},
+  ping: { desc: 'comprueba conectividad (ping -c 4 host)', async run(args) {
+    let count = null; const rest = [];
+    for (let i = 0; i < args.length; i++) {
+      const a = args[i];
+      if (a === '-c') { count = parseInt(args[++i], 10); continue; }
+      if (/^-c\d+$/.test(a)) { count = parseInt(a.slice(2), 10); continue; }
+      if (a.startsWith('-')) continue;
+      rest.push(a);
+    }
+    const host = rest[0];
+    if (!host) { out('ping: usage error: Destination address required', 'err'); return 1; }
+    if (count !== null && (!count || count < 1)) { out('ping: invalid argument', 'err'); return 1; }
+    const known = { 'google.com': '142.250.78.14', 'www.google.com': '142.250.78.4', 'kali.org': '104.18.4.159', 'www.kali.org': '104.18.4.159', 'github.com': '140.82.112.4', 'localhost': '127.0.0.1', 'kali': '127.0.1.1', 'gateway': '10.0.2.2' };
+    let ip = known[host.toLowerCase()];
+    if (!ip && /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) ip = host;
+    if (!ip && /\.[a-z]{2,}$/i.test(host)) { const h = [...host].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7); ip = `${(h % 200) + 20}.${(h >> 8) % 255}.${(h >> 16) % 255}.${(h >> 4) % 250 + 2}`; }
+    if (!ip) { out(`ping: ${host}: Name or service not known`, 'err'); return 2; }
+    const local = ip.startsWith('127.') || /^10\.0\.2\.(2|3|15)$/.test(ip);
+    const unreachable = !local && /^10\.|^172\.(1[6-9]|2\d|3[01])\.|^192\.168\./.test(ip);
+    out(`PING ${host} (${ip}) 56(84) bytes of data.`);
+    const max = count ?? 8; let sent = 0, recv = 0; const times = [];
+    for (let i = 1; i <= max; i++) {
+      if (!(await pause(i === 1 ? 250 : 650))) break;
+      sent++;
+      if (unreachable) { out(`From 10.0.2.15 icmp_seq=${i} Destination Host Unreachable`); continue; }
+      const t = local ? (Math.random() * 1.5 + 0.3) : (Math.random() * 18 + 9); times.push(t); recv++;
+      out(`64 bytes from ${host === ip ? ip : host + ' (' + ip + ')'}: icmp_seq=${i} ttl=${local ? 64 : 117} time=${t.toFixed(1)} ms`);
+    }
+    if (state.abort) out('^C');
+    out(''); out(`--- ${host} ping statistics ---`);
+    out(`${sent} packets transmitted, ${recv} received, ${sent ? Math.round((sent - recv) / sent * 100) : 0}% packet loss, time ${sent * 650}ms`);
+    if (times.length) { const mn = Math.min(...times), mx = Math.max(...times), av = times.reduce((a, b) => a + b) / times.length; out(`rtt min/avg/max/mdev = ${mn.toFixed(3)}/${av.toFixed(3)}/${mx.toFixed(3)}/${((mx - mn) / 2).toFixed(3)} ms`); }
+    if (count === null && !state.abort) note('(En Kali real ping no se detiene solo: se para con Ctrl+C o usando -c. Aquí se detuvo a los 8.)');
+    const wasAbort = state.abort; state.abort = false;
+    if (wasAbort) return 0;
+    return recv ? 0 : 1;
+  }},
+  sleep: { desc: 'espera unos segundos (sleep 2)', async run(args) { const n = parseFloat(args[0]); if (isNaN(n)) { out('sleep: missing operand', 'err'); return 1; } return (await pause(Math.min(n, 15) * 1000)) ? 0 : 130; } },
+  true: { desc: 'no hace nada (éxito)', run: () => 0 },
+  false: { desc: 'no hace nada (error)', run: () => 1 },
+  whoami: { desc: 'muestra tu usuario', run(a, ctx) { out(ctx.sudo ? 'root' : 'kali'); return 0; } },
+  id: { desc: 'muestra tu usuario y grupos', run(a, ctx) { out(ctx.sudo ? 'uid=0(root) gid=0(root) groups=0(root)' : 'uid=1000(kali) gid=1000(kali) groups=1000(kali),27(sudo),100(users)'); return 0; } },
+  hostname: { desc: 'muestra el nombre del equipo', run() { out('kali'); return 0; } },
+  date: { desc: 'muestra la fecha y hora', run() { const d = new Date(); out(d.toString().replace(/ GMT.*$/, '')); return 0; } },
+  uname: { desc: 'información del sistema (uname -a)', run(args) { out(args.includes('-a') ? 'Linux kali 6.12.20-amd64 #1 SMP PREEMPT_DYNAMIC Kali 6.12.20-1kali1 (2026-03-12) x86_64 GNU/Linux' : args.includes('-r') ? '6.12.20-amd64' : 'Linux'); return 0; } },
+  history: { desc: 'muestra los comandos anteriores', run() { state.history.forEach((h, i) => out(String(i + 1).padStart(5) + '  ' + h)); return 0; } },
+  clear: { desc: 'limpia la pantalla', run() { clearScreen(); return 0; } },
+  exit: { desc: 'cierra la terminal', run() { const id = cur.win; setTimeout(() => WM.close(id), 150); return 0; } },
+  man: { desc: 'muestra el manual de un comando', run(args) {
+    const c = args[0]; if (!c) { out('What manual page do you want?', 'err'); out('For example, try \'man man\'.', 'dim'); return 1; }
+    const d = CMDS[c]; if (!d) { out(`No manual entry for ${c}`, 'err'); return 16; }
+    out(`${c.toUpperCase()}(1)`, 'head'); out(''); out('NOMBRE'); out(`       ${c} - ${d.desc}`); out('');
+    out('(Manual resumido del simulador. En Kali real se sale del manual con la tecla q.)', 'dim'); return 0;
+  }},
+  find: { desc: 'busca archivos (find . -name "*.txt")', run(args, ctx) {
+    let base = '.', i = 0; if (args[0] && !args[0].startsWith('-')) { base = args[0]; i = 1; }
+    let name = null, iname = false, type = null;
+    for (; i < args.length; i++) {
+      if (args[i] === '-name' || args[i] === '-iname') { iname = args[i] === '-iname'; name = args[++i]; if (name == null) { out(`find: missing argument to '${args[i - 1]}'`, 'err'); return 1; } }
+      else if (args[i] === '-type') type = args[++i];
+      else { out(`find: unknown predicate '${args[i]}'`, 'err'); return 1; }
+    }
+    const abs = resolve(base), n = getNode(abs);
+    if (!n) { out(`find: '${base}': No such file or directory`, 'err'); return 1; }
+    const re = name ? new RegExp(globToRe(name).source, iname ? 'i' : '') : null;
+    let code = 0;
+    const walk = (a, shown, node) => {
+      const nm = a === '/' ? '/' : splitPath(a)[1];
+      if ((!re || re.test(nm)) && (!type || (type === 'd') === (node.t === 'd'))) out(shown);
+      if (node.t !== 'd') return;
+      if (denyRead(a, ctx)) { out(`find: '${shown}': Permission denied`, 'err'); code = 1; return; }
+      for (const [k, c] of Object.entries(node.c).sort()) walk((a === '/' ? '' : a) + '/' + k, (shown === '/' ? '' : shown.replace(/\/$/, '')) + '/' + k, c);
+    };
+    walk(abs, base, n); return code;
+  }},
+  grep: { desc: 'busca texto dentro de archivos', run(args, ctx) {
+    const { flags, rest } = parseFlags(args);
+    const pat = rest.shift(); if (pat == null) { out('Usage: grep [OPTION]... PATTERNS [FILE]...', 'err'); return 2; }
+    if (!rest.length && ctx.stdin == null) { note('(En el simulador, grep necesita un archivo. Ejemplo: grep "ERROR" log.txt)'); return 2; }
+    const re = new RegExp(pat.replace(/[.+^${}()[\]\\|]/g, '\\$&').replace(/\*/g, '.*'), flags.has('i') ? 'i' : '');
+    const reG = new RegExp(re.source, re.flags + 'g');
+    const files = [];
+    const add = (p, abs) => { const n = getNode(abs); if (!n) { out(`grep: ${p}: No such file or directory`, 'err'); return; } if (n.t === 'd') { if (!(flags.has('r') || flags.has('R'))) { out(`grep: ${p}: Is a directory`, 'err'); return; } for (const k of Object.keys(n.c).sort()) add(p.replace(/\/$/, '') + '/' + k, abs + '/' + k); return; } if (denyRead(abs, ctx)) { out(`grep: ${p}: Permission denied`, 'err'); return; } files.push([p, n]); };
+    if (!rest.length) files.push(['(stdin)', { t: 'f', d: ctx.stdin }]); else rest.forEach(p => add(p, resolve(p)));
+    let found = false; const multi = files.length > 1;
+    for (const [p, n] of files) n.d.split('\n').forEach((l, idx) => {
+      if (!re.test(l)) return; found = true;
+      const parts = []; if (multi) parts.push({ t: p + ':', c: 'c-hid' }); if (flags.has('n')) parts.push({ t: (idx + 1) + ':', c: 'ok' });
+      let last = 0; l.replace(reG, (m, off) => { parts.push({ t: l.slice(last, off) }, { t: m, c: 'hl' }); last = off + m.length; return m; }); parts.push({ t: l.slice(last) });
+      outParts(parts);
+    });
+    return found ? 0 : 1;
+  }},
+  head: { desc: 'muestra las primeras líneas', run: (a, c) => headTail(a, c, true) },
+  tail: { desc: 'muestra las últimas líneas', run: (a, c) => headTail(a, c, false) },
+  wc: { desc: 'cuenta líneas (wc -l)', run(args, ctx) { const { rest } = parseFlags(args); let code = 0; if (!rest.length && ctx.stdin != null) { out(String(ctx.stdin ? ctx.stdin.replace(/\n$/, '').split('\n').length : 0)); return 0; } for (const t of rest) { const n = getNode(resolve(t)); if (!n || n.t !== 'f') { out(`wc: ${t}: No such file or directory`, 'err'); code = 1; continue; } out(`${n.d.split('\n').length - (n.d.endsWith('\n') ? 1 : 0)} ${t}`); } return code; } },
+  nano: { desc: 'editor de texto', run(args, ctx) { return openEditorCmd(args[0], ctx, 'nano'); } },
+  mousepad: { desc: 'editor de texto gráfico', run(args, ctx) { return openEditorCmd(args[0], ctx, 'mousepad'); } },
+  vim: { desc: 'editor de texto vim', pkg: 'vim', run(args, ctx) { return openEditorCmd(args[0], ctx, 'vim'); } },
+  zenity: { desc: 'crea cuadros de diálogo gráficos', pkg: 'zenity', run: args => zenityCmd(args) },
+  nmap: { desc: 'escáner de puertos', pkg: 'nmap', async run(args) {
+    if (args[0] === '--version' || args[0] === '-V') { out('Nmap version 7.94SVN ( https://nmap.org )'); return 0; }
+    const host = args.filter(a => !a.startsWith('-')).pop();
+    if (!host) { out('Nmap 7.94SVN ( https://nmap.org )'); out('Uso: nmap [Tipo(s) de escaneo] [Opciones] {objetivo}', 'dim'); return 0; }
+    out(`Starting Nmap 7.94SVN ( https://nmap.org ) at ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);
+    if (!(await pause(1300))) { out('^C'); return 130; }
+    outLines(`Nmap scan report for ${host}\nHost is up (0.0021s latency).\nNot shown: 997 closed tcp ports (conn-refused)\nPORT    STATE SERVICE\n22/tcp  open  ssh\n80/tcp  open  http\n443/tcp open  https\n\nNmap done: 1 IP address (1 host up) scanned in 1.32 seconds`);
+    return 0;
+  }},
+  htop: { desc: 'monitor de procesos', pkg: 'htop', run() { outLines('  PID USER      PRI  NI  VIRT   RES   SHR S CPU% MEM%   TIME+  Command\n    1 root       20   0  164M 12.1M  8.9M S  0.0  0.6  0:01.20 /sbin/init\n  612 root       20   0  316M 18.4M 14.2M S  0.3  0.9  0:00.88 NetworkManager\n  987 kali       20   0 1236M 98.2M 61.0M S  1.7  4.9  0:12.41 xfce4-session\n 1402 kali       20   0  223M 11.3M  8.2M S  0.0  0.5  0:00.10 zsh\n 1450 kali       20   0  208M  4.1M  3.4M R  0.7  0.2  0:00.02 htop'); out('(htop simulado: en Kali real se sale con q o F10)', 'dim'); return 0; } },
+  git: { desc: 'control de versiones', pkg: 'git', run(args) { if (args[0] === '--version') { out('git version 2.45.2'); return 0; } out('(git simulado) uso: git --version', 'dim'); return 0; } },
+  curl: { desc: 'descarga o consulta URLs', pkg: 'curl', run(args) { const u = args.filter(a => !a.startsWith('-'))[0]; if (!u) { out('curl: try \'curl --help\' for more information', 'err'); return 2; } if (args.includes('--version')) { out('curl 8.8.0 (x86_64-pc-linux-gnu)'); return 0; } outLines(`<!doctype html>\n<html><head><title>${u}</title></head>\n<body>Respuesta simulada de ${u}</body></html>`); return 0; } },
+  wget: { desc: 'descarga archivos', pkg: 'wget', async run(args, ctx) { const u = args.filter(a => !a.startsWith('-'))[0]; if (!u) { out('wget: falta una URL', 'err'); return 1; } const nm = (u.split('/').pop() || 'index.html').split('?')[0] || 'index.html'; out(`--${new Date().toISOString().slice(0, 19).replace('T', ' ')}--  ${u}`); if (!(await pause(700))) return 130; out('Petición HTTP enviada, esperando respuesta... 200 OK'); if (needsRoot(state.cwd)) { out(`${nm}: Permission denied`, 'err'); return 3; } getNode(state.cwd).c[nm] = F(`Contenido descargado de ${u}\n`); out(`Grabando a: «${nm}»`); out(`«${nm}» guardado [1256/1256]`); return 0; } },
+  ifconfig: { desc: 'muestra interfaces de red', pkg: 'net-tools', run() { outLines('eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255\n        ether 08:00:27:4e:66:a1  txqueuelen 1000  (Ethernet)\n\nlo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536\n        inet 127.0.0.1  netmask 255.0.0.0'); return 0; } },
+  tree: { desc: 'muestra carpetas en forma de árbol', pkg: 'tree', run(args) {
+    const base = args.filter(a => !a.startsWith('-'))[0] || '.', abs = resolve(base), n = getNode(abs);
+    if (!n || n.t !== 'd') { out(`${base}  [error opening dir]`, 'err'); return 2; }
+    let dirs = 0, files = 0; out(base, 'c-dir');
+    const walk = (node, pre) => { const es = Object.entries(node.c).filter(([k]) => !k.startsWith('.')).sort(); es.forEach(([k, c], i) => { const last = i === es.length - 1; outParts([{ t: pre + (last ? '└── ' : '├── ') }, { t: k, c: classFor(k, c) }]); if (c.t === 'd') { dirs++; walk(c, pre + (last ? '    ' : '│   ')); } else files++; }); };
+    walk(n, ''); out(''); out(`${dirs} directories, ${files} files`); return 0;
+  }},
+  neofetch: { desc: 'información del sistema', pkg: 'neofetch', run() { outParts([{ t: 'kali', c: 'pu' }, { t: '@' }, { t: 'kali', c: 'pu' }]); outLines('---------\nOS: Kali GNU/Linux Rolling x86_64\nKernel: 6.12.20-amd64\nShell: zsh 5.9\nDE: Xfce 4.20\nTerminal: kali-lab-web\nMemory: 1024MiB / 4096MiB'); return 0; } },
+  figlet: { desc: 'texto grande', pkg: 'figlet', run(args) { out(args.join(' ').toUpperCase().split('').join(' ') || ' ', 'head'); return 0; } },
+  python3: { desc: 'intérprete de Python', pkg: 'python3', run(args) { if (args[0] === '--version' || args[0] === '-V') { out('Python 3.12.4'); return 0; } out('(Python simulado) prueba: python3 --version', 'dim'); return 0; } },
+};
+
+async function headTail(args, ctx, head) {
+  let n = 10; const files = [];
+  for (let i = 0; i < args.length; i++) { const a = args[i]; if (a === '-n') n = parseInt(args[++i], 10); else if (/^-n\d+$/.test(a)) n = parseInt(a.slice(2), 10); else if (/^-\d+$/.test(a)) n = parseInt(a.slice(1), 10); else files.push(a); }
+  if (isNaN(n)) { out(`${head ? 'head' : 'tail'}: número de líneas inválido`, 'err'); return 1; }
+  if (!files.length) { if (ctx.stdin != null) { const ls = ctx.stdin.replace(/\n$/, '').split('\n'); (head ? ls.slice(0, n) : ls.slice(Math.max(0, ls.length - n))).forEach(l => out(l)); return 0; } note(`(En el simulador, ${head ? 'head' : 'tail'} necesita un archivo)`); return 1; }
+  let code = 0;
+  for (const t of files) {
+    const abs = resolve(t), node = getNode(abs);
+    if (!node || node.t !== 'f') { out(`${head ? 'head' : 'tail'}: cannot open '${t}' for reading: No such file or directory`, 'err'); code = 1; continue; }
+    if (denyRead(abs, ctx)) { out(`${head ? 'head' : 'tail'}: cannot open '${t}' for reading: Permission denied`, 'err'); code = 1; continue; }
+    const ls = node.d.replace(/\n$/, '').split('\n');
+    (head ? ls.slice(0, n) : ls.slice(Math.max(0, ls.length - n))).forEach(l => out(l));
+  }
+  return code;
+}
+
+function openEditorCmd(path, ctx, prog) {
+  if (!path) { out(`(${prog}: indica un archivo. Ejemplo: ${prog} notas.txt)`, 'dim'); return 1; }
+  const abs = resolve(path), n = getNode(abs);
+  if (n && n.t === 'd') { out(`${prog}: «${path}» es un directorio`, 'err'); return 1; }
+  if (n && denyRead(abs, ctx)) { out(`${prog}: «${path}»: Permission denied`, 'err'); return 1; }
+  openEditor(abs, !!ctx.sudo);
+  out(`(Se abrió ${pretty(abs)} en el editor. Escribe, pulsa «Guardar» y cierra la ventana.)`, 'dim');
+  return 0;
+}
+
+/* ---------- apt ---------- */
+async function apt(args, ctx) {
+  const sub = args[0];
+  const pkgs = args.slice(1).filter(a => !a.startsWith('-'));
+  const yes = args.includes('-y') || args.includes('--yes');
+  if (!sub || sub === '--help' || sub === '-h') {
+    outLines('apt 3.0.3 (amd64)\nUsage: apt [options] command\n\nMost used commands:\n  update  - update list of available packages\n  install - install packages\n  remove  - remove packages\n  upgrade - upgrade the system by installing/upgrading packages\n  list    - list packages based on package names'); return 0;
+  }
+  if (sub === 'list') { out('Listing... Done'); [...state.installed].sort().forEach(p => out(`${p}/kali-rolling,now ${CATALOG[p] || '1.0'} amd64 [installed]`)); return 0; }
+  if (sub === 'search') { const q = pkgs[0] || ''; Object.keys(CATALOG).filter(p => p.includes(q)).forEach(p => out(`${p}/kali-rolling ${CATALOG[p]} amd64`)); return 0; }
+  if (!['update', 'install', 'remove', 'purge', 'upgrade', 'full-upgrade', 'autoremove'].includes(sub)) { out(`E: Invalid operation ${sub}`, 'err'); return 100; }
+  if (!ctx.sudo) {
+    out('E: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)', 'err');
+    out('E: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?', 'err');
+    return 100;
+  }
+  const step = async (t, ms = 260, cls) => { if (!(await pause(ms))) throw new Error('abort'); out(t, cls); };
+  try {
+    if (sub === 'update') {
+      await step('Hit:1 http://http.kali.org/kali kali-rolling InRelease', 350);
+      await step('Get:2 http://http.kali.org/kali kali-rolling/main amd64 Packages [20.6 MB]', 600);
+      await step('Get:3 http://http.kali.org/kali kali-rolling/contrib amd64 Packages [118 kB]', 300);
+      await step('Fetched 20.7 MB in 3s (6,902 kB/s)', 400);
+      await step('Reading package lists... Done', 300);
+      await step('Building dependency tree... Done', 200);
+      await step('Reading state information... Done', 150);
+      await step("12 packages can be upgraded. Run 'apt list --upgradable' to see them.", 200);
+      state.aptUpdated = true; return 0;
+    }
+    if (sub === 'upgrade' || sub === 'full-upgrade' || sub === 'autoremove') {
+      await step('Reading package lists... Done'); await step('Building dependency tree... Done'); await step('Calculating upgrade... Done', 400);
+      await step('0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.'); return 0;
+    }
+    if (!pkgs.length) { out('E: No packages found', 'err'); return 100; }
+    await step('Reading package lists... Done', 300);
+    await step('Building dependency tree... Done', 200);
+    await step('Reading state information... Done', 150);
+    if (sub === 'install') {
+      for (const p of pkgs) if (!CATALOG[p] && !BASE_PKGS.includes(p)) { out(`E: Unable to locate package ${p}`, 'err'); return 100; }
+      const nuevos = pkgs.filter(p => !state.installed.has(p));
+      pkgs.filter(p => state.installed.has(p)).forEach(p => out(`${p} is already the newest version (${CATALOG[p] || '1.0'}).`));
+      if (!nuevos.length) { out('0 upgraded, 0 newly installed, 0 to remove and 12 not upgraded.'); return 0; }
+      out('The following NEW packages will be installed:'); out('  ' + nuevos.join(' '));
+      out(`0 upgraded, ${nuevos.length} newly installed, 0 to remove and 12 not upgraded.`);
+      out(`Need to get ${(nuevos.length * 1.7).toFixed(1)} MB of archives.`);
+      if (!yes) { const r = await askInput('Do you want to continue? [Y/n] '); if (r === null || /^n/i.test(r.trim())) { out('Abort.'); return 1; } }
+      let i = 1;
+      for (const p of nuevos) await step(`Get:${i++} http://http.kali.org/kali kali-rolling/main amd64 ${p} amd64 ${CATALOG[p]} [${(Math.random() * 1500 + 200).toFixed(0)} kB]`, 500);
+      for (const p of nuevos) { await step(`Selecting previously unselected package ${p}.`, 200); await step(`Unpacking ${p} (${CATALOG[p]}) ...`, 250); await step(`Setting up ${p} (${CATALOG[p]}) ...`, 250); state.installed.add(p); }
+      await step('Processing triggers for man-db (2.13.0-1) ...', 300);
+      return 0;
+    }
+    // remove / purge
+    const inst = pkgs.filter(p => state.installed.has(p));
+    pkgs.filter(p => !state.installed.has(p)).forEach(p => out(`Package '${p}' is not installed, so not removed`));
+    if (!inst.length) return 0;
+    out('The following packages will be REMOVED:'); out('  ' + inst.join(' '));
+    if (!yes) { const r = await askInput('Do you want to continue? [Y/n] '); if (r === null || /^n/i.test(r.trim())) { out('Abort.'); return 1; } }
+    for (const p of inst) { await step(`Removing ${p} (${CATALOG[p] || '1.0'}) ...`, 300); state.installed.delete(p); }
+    return 0;
+  } catch (e) { if (e.message === 'abort') { out('^C'); state.abort = false; return 130; } throw e; }
+}
+
+/* ---------- Zenity ---------- */
+function parseZenity(args) {
+  const o = { items: [], columns: [] }; const valued = ['text', 'title', 'column', 'entry-text', 'percentage', 'width', 'height', 'filename', 'date-format'];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a.startsWith('--')) {
+      let [k, v] = a.slice(2).split(/=(.*)/s);
+      if (v === undefined && valued.includes(k) && args[i + 1] !== undefined && !args[i + 1].startsWith('--')) v = args[++i];
+      if (k === 'column') o.columns.push(v ?? ''); else o[k] = v ?? true;
+    } else o.items.push(a);
+  }
+  return o;
+}
+async function zenityCmd(args) {
+  const o = parseZenity(args);
+  if (o.version) { out('4.0.1'); return 0; }
+  if (o.help || !args.length) {
+    outLines('Uso:\n  zenity [OPCIÓN…]\n\nOpciones de diálogo:\n  --info  --error  --warning  --question  --entry\n  --calendar  --progress  --list  --file-selection\n\nOtras: --text=TEXTO  --title=TÍTULO  --column=COLUMNA');
+    return args.length ? 0 : 255;
+  }
+  const types = ['info', 'error', 'warning', 'question', 'entry', 'calendar', 'progress', 'list', 'file-selection', 'notification', 'password', 'scale', 'color-selection', 'forms', 'text-info'];
+  const type = types.find(t => o[t]);
+  if (!type) { out("You must specify a dialog type. See 'zenity --help' for details", 'err'); return 255; }
+  if (type === 'notification') { toast('🔔 ' + (o.text || 'Notificación')); return 0; }
+  if (!['info', 'error', 'warning', 'question', 'entry', 'calendar', 'progress', 'list', 'file-selection', 'password'].includes(type)) { out(`(El tipo --${type} no está disponible en el simulador)`, 'dim'); return 1; }
+  if (type === 'list' && !o.columns.length) { out('No column titles specified for List dialog.', 'err'); return 255; }
+  note('(🪟 Se abrió una ventana de Zenity en el escritorio)');
+  const r = await showZenity(type, o);
+  if (r.out != null && r.out !== '') out(r.out);
+  return r.code;
+}
+function showZenity(type, o) {
+  return new Promise(res => {
+    const titles = { info: 'Información', error: 'Error', warning: 'Advertencia', question: 'Pregunta', entry: 'Añadir una entrada nueva', calendar: 'Seleccionar fecha', progress: 'Progreso', list: 'Seleccione elementos de una lista', 'file-selection': 'Seleccione un archivo', password: 'Escriba su contraseña' };
+    const icons = { info: ['ℹ️', '#2f81f733'], error: ['⛔', '#ef444433'], warning: ['⚠️', '#f59e0b33'], question: ['❓', '#8b5cf633'], entry: ['✍️', '#22d3ee22'], calendar: ['📅', '#22d3ee22'], progress: ['⏳', '#2f81f733'], list: ['📋', '#4ade8022'], 'file-selection': ['📂', '#fbbf2422'], password: ['🔑', '#fbbf2422'] };
+    const defText = { info: 'Todas las actualizaciones están completas.', error: 'Ha ocurrido un error.', warning: '¿Está seguro de que quiere continuar?', question: '¿Está seguro de que quiere continuar?', entry: 'Introduzca un texto nuevo:', calendar: 'Seleccione una fecha de abajo.', progress: 'Ejecutando…', list: '', 'file-selection': '' };
+    const ov = el('div', { class: 'zen-ov' });
+    const box = el('div', { class: 'zen', role: 'dialog', 'aria-modal': 'true' });
+    const c = el('div', { class: 'zen-c' });
+    const text = (o.text === true ? '' : o.text) ?? defText[type];
+    if (text) c.append(el('div', { text: String(text).replace(/\\n/g, '\n'), style: 'white-space:pre-wrap' }));
+    const foot = el('div', { class: 'zen-f' });
+    let getOut = () => '';
+    const done = (code, outv) => { ov.remove(); state.zenClose = null; res({ code, out: outv }); };
+    state.zenClose = done;
+    const btn = (label, fn, pri) => { const b = el('button', { class: pri ? 'pri' : '', text: label, onclick: fn }); foot.append(b); return b; };
+    let okBtn;
+    if (type === 'entry' || type === 'password') {
+      const inp = el('input', { type: type === 'password' ? 'password' : 'text', value: o['entry-text'] && o['entry-text'] !== true ? o['entry-text'] : '' });
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') okBtn.click(); }); c.append(inp); getOut = () => inp.value;
+      setTimeout(() => inp.focus(), 60);
+    } else if (type === 'calendar') {
+      const inp = el('input', { type: 'date', value: new Date().toISOString().slice(0, 10) }); c.append(inp);
+      getOut = () => { const [y, m, d] = (inp.value || '').split('-'); return inp.value ? `${d}/${m}/${y.slice(2)}` : ''; };
+    } else if (type === 'progress') {
+      const bar = el('div', { class: 'zbar' }, el('i')); c.append(bar);
+      let p = Math.max(0, Math.min(100, parseInt(o.percentage, 10) || 0));
+      const pct = el('div', { class: 'dim', style: 'margin-top:6px;font-size:12px', text: p + '%' }); c.append(pct);
+      const iv = setInterval(() => { p = Math.min(100, p + 4); bar.firstChild.style.width = p + '%'; pct.textContent = p + '%'; if (p >= 100) { clearInterval(iv); okBtn.disabled = false; if (o['auto-close']) done(0, ''); } }, 90);
+    } else if (type === 'list' || type === 'file-selection') {
+      let rows = [], cols = o.columns;
+      if (type === 'list') { const nc = Math.max(1, cols.length); for (let i = 0; i < o.items.length; i += nc) rows.push(o.items.slice(i, i + nc)); }
+      else { cols = ['Nombre', 'Ubicación']; const all = []; const walk = (a, n) => { for (const [k, ch] of Object.entries(n.c).sort()) { if (k.startsWith('.')) continue; const p = a + '/' + k; if (ch.t === 'f') all.push([k, pretty(splitPath(p)[0]), p]); else walk(p, ch); } }; walk(HOME, getNode(HOME)); rows = all; }
+      let sel = -1; const tb = el('tbody');
+      rows.forEach((r, i) => { const tr = el('tr', { onclick: () => { $$('tr', tb).forEach(x => x.classList.remove('sel')); tr.classList.add('sel'); sel = i; }, ondblclick: () => okBtn.click() }, ...cols.map((_, j) => el('td', { text: r[j] ?? '' }))); tb.append(tr); });
+      if (!rows.length) tb.append(el('tr', {}, el('td', { text: '(lista vacía)', colspan: String(cols.length) })));
+      c.append(el('div', { class: 'zlist' }, el('table', {}, el('thead', {}, el('tr', {}, ...cols.map(h => el('th', { text: h })))), tb)));
+      getOut = () => sel < 0 ? null : (type === 'list' ? rows[sel][0] : rows[sel][2]);
+    }
+    if (type === 'question') { btn('No', () => done(1, '')); okBtn = btn('Sí', () => done(0, ''), true); }
+    else if (['info', 'error', 'warning'].includes(type)) okBtn = btn('Aceptar', () => done(0, ''), true);
+    else {
+      btn('Cancelar', () => done(1, ''));
+      okBtn = btn('Aceptar', () => { const v = getOut(); if (v === null) { toast('Selecciona un elemento de la lista'); return; } done(0, v); }, true);
+      if (type === 'progress') okBtn.disabled = true;
+    }
+    const ic = icons[type];
+    box.append(
+      el('div', { class: 'zen-t' }, el('span', { text: o.title && o.title !== true ? o.title : titles[type] }), el('small', { text: 'zenity' })),
+      el('div', { class: 'zen-b' }, el('div', { class: 'zen-ico', text: ic[0], style: `background:${ic[1]}` }), c),
+      foot);
+    ov.append(box); $('#desktop').append(ov);
+    if (!['entry', 'password'].includes(type)) setTimeout(() => okBtn.focus(), 60);
+  });
+}
+
+/* =====================================================================
+   LA PROFE: tareas y corrección
+   ===================================================================== */
+const NEUTRAL = new Set(['ls', 'll', 'pwd', 'cat', 'clear', 'history', 'whoami', 'help', 'ayuda', 'man', 'tree', 'id', 'date', 'hostname', 'head', 'tail']);
+const REP = 'Reporte de escaneo\n------------------\nHost 192.168.1.1: activo\nPuertos abiertos: 22, 80\n';
+
+// Ayudantes para preparar tareas
+function S(notes) {
+  return {
+    rm(p) { const a = resolve(p), [pa, nm] = splitPath(a), P = getNode(pa); if (P && P.c[nm]) delete P.c[nm]; },
+    file(p, d = '', x = false) { const a = resolve(p), [pa, nm] = splitPath(a); mkdirp(pa); getNode(pa).c[nm] = F(d, x); },
+    dir(p) { mkdirp(resolve(p)); },
+    cd(p) { state.prevCwd = state.cwd; state.cwd = resolve(p); renderPrompt(); },
+    pkg(n) { state.installed.add(n); }, unpkg(n) { state.installed.delete(n); },
+    note(t) { notes.push(t); },
+  };
+}
+// Ayudantes para revisar tareas
+function C() {
+  const logs = state.taskLog.map(l => {
+    let a = tokenize(l.cmd).filter(t => !t.op).map(t => t.v);
+    const cut = tokenize(l.cmd).findIndex(t => t.op); if (cut >= 0) a = tokenize(l.cmd).slice(0, cut).map(t => t.v);
+    while (a[0] === 'sudo') { a.shift(); while (a[0] && /^-[EHk]$/.test(a[0])) a.shift(); }
+    return { ...l, a };
+  });
+  const node = p => getNode(resolve(p));
+  return {
+    dir: p => node(p)?.t === 'd', file: p => node(p)?.t === 'f', none: p => !node(p), exec: p => node(p)?.t === 'f' && isExec(node(p)),
+    mode: p => node(p)?.mode, read: p => node(p)?.t === 'f' ? node(p).d : '', cwd: () => state.cwd, has: k => state.installed.has(k),
+    ran: (name, pred = () => true, anyCode = false) => logs.some(l => l.a[0] && (anyCode ? l.code !== 127 : l.code === 0) && ([].concat(name)).includes(l.a[0]) && pred(l.a.slice(1), l)),
+    flag: (name, f) => logs.some(l => l.code === 0 && ((l.a[0] === name && l.a.slice(1).some(x => /^-[a-zA-Z]+$/.test(x) && x.includes(f))) || (name === 'ls' && l.a[0] === 'll' && f === 'l'))),
+    exe: nm => logs.some(l => l.code === 0 && l.a[0] && ((l.a[0].includes('/') && l.a[0].endsWith(nm)) || (['bash', 'sh', 'zsh'].includes(l.a[0]) && (l.a[1] || '').endsWith(nm)))),
+    apt: (sub, pkg) => logs.some(l => l.code === 0 && ['apt', 'apt-get'].includes(l.a[0]) && l.a[1] === sub && (!pkg || l.a.includes(pkg))),
+    zen: (type, re) => logs.some(l => l.code !== 127 && l.code !== 255 && l.a[0] === 'zenity' && l.a.some(x => x === '--' + type) && (!re || re.test(l.a.join(' ')))),
+    okCount: () => logs.filter(l => l.code === 0 && !NEUTRAL.has(l.a[0])).length,
+  };
+}
+const has = (a, re) => a.some(x => re.test(x));
+
+const TAREAS = [
+  // ---- Carpetas ----
+  { t: 'Crea una carpeta llamada <b>scripts</b> en tu carpeta personal.', cmd: 'mkdir', sol: 'mkdir scripts', pista: 'El comando viene de "make directory".', setup: s => s.rm('~/scripts'), check: c => c.dir('~/scripts') },
+  { t: '¿Cómo creas una carpeta llamada <b>reportes</b>? Hazlo.', cmd: 'mkdir', sol: 'mkdir reportes', pista: 'Es el mismo comando que se usa para crear cualquier carpeta.', setup: s => s.rm('~/reportes'), check: c => c.dir('~/reportes') },
+  { t: 'Crea la carpeta <b>pentesting</b> y entra en ella.', cmd: 'mkdir', pasos: 2, sol: 'mkdir pentesting && cd pentesting', pista: 'Son dos comandos: uno crea la carpeta y otro cambia de directorio.', setup: s => s.rm('~/pentesting'), check: c => c.dir('~/pentesting') && c.cwd() === HOME + '/pentesting' },
+  { t: 'Crea de una sola vez las carpetas anidadas <b>proyectos/kali/scripts</b>.', cmd: 'mkdir', sol: 'mkdir -p proyectos/kali/scripts', pista: 'mkdir tiene una opción para crear también las carpetas intermedias.', setup: s => s.rm('~/proyectos'), check: c => c.dir('~/proyectos/kali/scripts') },
+  { t: 'Crea una carpeta llamada <b>herramientas</b> dentro de <b>/opt</b>. Ojo: /opt pertenece al administrador.', cmd: 'mkdir', sol: 'sudo mkdir /opt/herramientas', pista: 'Para escribir en carpetas del sistema necesitas privilegios de administrador.', setup: s => s.rm('/opt/herramientas'), check: c => c.dir('/opt/herramientas') },
+  { t: 'Borra la carpeta vacía <b>vacia</b>.', cmd: 'rmdir', sol: 'rmdir vacia', pista: 'Existe un comando específico para borrar carpetas vacías (también sirve rm con la opción de carpetas).', setup: s => s.dir('~/vacia'), check: c => c.none('~/vacia') },
+
+  // ---- Navegación ----
+  { t: '¿Cómo sabes en qué carpeta estás ahora mismo? Escribe el comando.', cmd: 'pwd', sol: 'pwd', pista: 'Son las siglas de "print working directory".', check: c => c.ran('pwd') },
+  { t: 'Lista los archivos y carpetas de tu carpeta personal.', cmd: 'ls', sol: 'ls', pista: 'Es el comando más corto para listar.', check: c => c.ran(['ls', 'll']) },
+  { t: 'Lista los archivos en <b>formato detallado</b> (permisos, tamaño, fecha).', cmd: 'ls', sol: 'ls -l', pista: 'Al comando para listar agrégale la opción de formato largo.', check: c => c.flag('ls', 'l') },
+  { t: 'Muestra también los <b>archivos ocultos</b> de tu carpeta personal.', cmd: 'ls', sol: 'ls -a', pista: 'Los ocultos empiezan con punto; ls tiene una opción para mostrar "all".', check: c => c.flag('ls', 'a') },
+  { t: 'Lista <b>todo</b> (incluidos los ocultos) en <b>formato detallado</b>.', cmd: 'ls', sol: 'ls -la', pista: 'Combina dos opciones de ls en una sola.', check: c => c.flag('ls', 'l') && c.flag('ls', 'a') },
+  { t: 'Entra a la carpeta <b>Documents</b>.', cmd: 'cd', sol: 'cd Documents', pista: 'El comando viene de "change directory".', check: c => c.cwd() === HOME + '/Documents' },
+  { t: 'Te dejé dentro de <b>~/Documents</b>. Sube a la carpeta de arriba (la carpeta padre).', cmd: 'cd', sol: 'cd ..', pista: 'La carpeta padre se representa con dos puntos.', keepCwd: true, setup: s => s.cd('~/Documents'), check: c => c.cwd() === HOME },
+  { t: 'Estás en <b>/etc</b>. Vuelve a tu carpeta personal desde ahí.', cmd: 'cd', sol: 'cd ~', pista: 'Tu carpeta personal se representa con la virgulilla (~), o simplemente cd sin nada.', keepCwd: true, setup: s => s.cd('/etc'), check: c => c.cwd() === HOME },
+  { t: 'Entra a la carpeta <b>/etc</b>.', cmd: 'cd', sol: 'cd /etc', pista: 'Usa una ruta absoluta (empieza con /).', check: c => c.cwd() === '/etc' },
+  { t: 'Lista el contenido de la carpeta <b>/var/log</b> sin entrar en ella.', cmd: 'ls', sol: 'ls /var/log', pista: 'ls acepta una ruta como argumento.', check: c => c.ran(['ls', 'll'], a => has(a, /^\/var\/log\/?$/)) },
+
+  // ---- Archivos ----
+  { t: 'Crea un archivo vacío llamado <b>ideas.txt</b>.', cmd: 'touch', sol: 'touch ideas.txt', pista: 'Hay un comando que "toca" un archivo y lo crea si no existe.', setup: s => s.rm('~/ideas.txt'), check: c => c.file('~/ideas.txt') },
+  { t: '¿Cómo creas un archivo vacío llamado <b>puertos.sh</b>? Hazlo.', cmd: 'touch', sol: 'touch puertos.sh', pista: 'Mismo comando que para cualquier archivo vacío.', setup: s => s.rm('~/puertos.sh'), check: c => c.file('~/puertos.sh') },
+  { t: 'Copia el archivo <b>reporte.txt</b> a la carpeta <b>respaldo</b>.', cmd: 'cp', sol: 'cp reporte.txt respaldo/', pista: 'El comando de copiar recibe primero el origen y luego el destino.', setup: s => { s.file('~/reporte.txt', REP); s.rm('~/respaldo'); s.dir('~/respaldo'); s.note('📁 Preparé la carpeta respaldo.'); }, check: c => c.file('~/respaldo/reporte.txt') && c.file('~/reporte.txt') },
+  { t: 'Copia la carpeta <b>scripts</b> completa a una nueva carpeta llamada <b>scripts_copia</b>.', cmd: 'cp', sol: 'cp -r scripts scripts_copia', pista: 'Para copiar carpetas, cp necesita una opción recursiva.', setup: s => { s.rm('~/scripts'); s.file('~/scripts/ataque.sh', '#!/bin/bash\necho "prueba"\n'); s.rm('~/scripts_copia'); s.note('📁 Preparé la carpeta scripts con un archivo dentro.'); }, check: c => c.dir('~/scripts_copia') && c.file('~/scripts_copia/ataque.sh') },
+  { t: 'Cambia el nombre del archivo <b>viejo.sh</b> a <b>nuevo.sh</b>.', cmd: 'mv', sol: 'mv viejo.sh nuevo.sh', pista: 'En Linux, renombrar es lo mismo que "mover" a otro nombre.', setup: s => { s.file('~/viejo.sh', '#!/bin/bash\necho "hola"\n'); s.rm('~/nuevo.sh'); }, check: c => c.none('~/viejo.sh') && c.file('~/nuevo.sh') },
+  { t: 'Renombra la carpeta <b>temp</b> a <b>temporal</b>.', cmd: 'mv', sol: 'mv temp temporal', pista: 'Se renombra igual que un archivo.', setup: s => { s.rm('~/temporal'); s.rm('~/temp'); s.file('~/temp/a.tmp', 'x\n'); }, check: c => c.none('~/temp') && c.dir('~/temporal') },
+  { t: 'Mueve el archivo <b>notas.txt</b> (está en ~) a la carpeta <b>Documents</b>.', cmd: 'mv', sol: 'mv notas.txt Documents/', pista: 'Mover: origen primero, carpeta destino después.', setup: s => { s.file('~/notas.txt', 'Mis notas\n'); s.rm('~/Documents/notas.txt'); }, check: c => c.none('~/notas.txt') && c.file('~/Documents/notas.txt') },
+  { t: 'Mueve el archivo <b>resultado.txt</b> a la carpeta <b>/tmp</b>.', cmd: 'mv', sol: 'mv resultado.txt /tmp', pista: 'El destino puede ser una ruta absoluta.', setup: s => { s.file('~/resultado.txt', 'resultado\n'); s.rm('/tmp/resultado.txt'); }, check: c => c.file('/tmp/resultado.txt') && c.none('~/resultado.txt') },
+  { t: 'Borra el archivo <b>basura.txt</b>.', cmd: 'rm', sol: 'rm basura.txt', pista: 'El comando viene de "remove".', setup: s => s.file('~/basura.txt', 'basura\n'), check: c => c.none('~/basura.txt') },
+  { t: '¿Cómo borras la carpeta <b>temporal</b> con todo lo que tiene dentro? Hazlo.', cmd: 'rm', sol: 'rm -r temporal', pista: 'rm necesita una opción para borrar carpetas de forma recursiva.', setup: s => { s.rm('~/temporal'); s.file('~/temporal/a.tmp', '1\n'); s.file('~/temporal/b.tmp', '2\n'); }, check: c => c.none('~/temporal') },
+  { t: 'Borra el archivo <b>log_viejo.txt</b> que está dentro de la carpeta <b>logs</b> (sin borrar la carpeta).', cmd: 'rm', sol: 'rm logs/log_viejo.txt', pista: 'Puedes escribir la ruta carpeta/archivo.', setup: s => { s.rm('~/logs'); s.file('~/logs/log_viejo.txt', 'viejo\n'); s.file('~/logs/actual.log', 'actual\n'); }, check: c => c.none('~/logs/log_viejo.txt') && c.file('~/logs/actual.log') },
+  { t: 'Muestra en la terminal el contenido de <b>reporte.txt</b>.', cmd: 'cat', sol: 'cat reporte.txt', pista: 'Es un comando corto que "concatena" y muestra archivos.', setup: s => s.file('~/reporte.txt', REP), check: c => c.ran('cat', a => has(a, /reporte\.txt$/)) },
+  { t: 'Muestra el contenido del archivo <b>/etc/hostname</b>.', cmd: 'cat', sol: 'cat /etc/hostname', pista: 'Mismo comando para ver archivos, con ruta absoluta.', check: c => c.ran('cat', a => has(a, /^\/etc\/hostname$/)) },
+  { t: 'Crea el archivo <b>saludo.txt</b> con el texto <b>hola kali</b> usando <b>echo</b>.', cmd: 'echo', sol: 'echo "hola kali" > saludo.txt', pista: 'echo muestra texto; el símbolo > lo guarda en un archivo.', setup: s => s.rm('~/saludo.txt'), check: c => /hola kali/i.test(c.read('~/saludo.txt')) },
+  { t: 'Muestra solo las <b>últimas 2 líneas</b> de <b>log.txt</b>.', cmd: 'tail', sol: 'tail -n 2 log.txt', pista: 'Hay un comando para ver el final ("cola") de un archivo.', check: c => c.ran('tail', (a, l) => /log\.txt/.test(l.cmd) && /(-n\s*2\b|-2\b)/.test(l.cmd)) },
+  { t: 'Busca la palabra <b>ERROR</b> dentro de <b>log.txt</b>.', cmd: 'grep', sol: 'grep "ERROR" log.txt', pista: 'Hay un comando para buscar texto dentro de archivos.', setup: s => s.file('~/log.txt', '[INFO] inicio del sistema\n[ERROR] sin conexión\n[INFO] reintentando\n[ERROR] tiempo de espera agotado\n[INFO] conectado\n'), check: c => c.ran('grep', a => has(a, /error/i) && has(a, /log\.txt$/)) },
+  { t: 'Busca todos los archivos con extensión <b>.txt</b> dentro de tu carpeta personal.', cmd: 'find', sol: 'find . -name "*.txt"', pista: 'Usa find con la opción -name y un patrón con asterisco.', check: c => c.ran('find', a => a.includes('-name') || a.includes('-iname')) && c.ran('find', a => has(a, /\*\.txt$/)) },
+
+  // ---- Permisos y sudo ----
+  { t: 'Dale permiso de ejecución al archivo <b>escaneo.sh</b>.', cmd: 'chmod', sol: 'chmod +x escaneo.sh', pista: 'chmod con un + y la letra de "ejecutar".', setup: s => s.file('~/escaneo.sh', '#!/bin/bash\necho "Escaneando la red..."\necho "Escaneo terminado"\n'), check: c => c.exec('~/escaneo.sh') },
+  { t: 'Dale permiso de ejecución a <b>backup.sh</b> y luego ejecútalo.', cmd: 'chmod', pasos: 2, sol: 'chmod +x backup.sh && ./backup.sh', pista: 'Primero chmod, luego ejecútalo con ./ delante del nombre.', setup: s => s.file('~/backup.sh', '#!/bin/bash\necho "Creando respaldo..."\necho "Respaldo listo ✔"\n'), check: c => c.exec('~/backup.sh') && c.exe('backup.sh') },
+  { t: 'Ejecuta el script <b>menu.sh</b> que está en tu carpeta personal (ya tiene permisos).', cmd: './menu.sh', sol: './menu.sh', pista: 'Para ejecutar un script de la carpeta actual se pone ./ delante.', setup: s => s.file('~/menu.sh', '#!/bin/bash\necho "=== MENÚ ==="\necho "1) Escanear"\necho "2) Reporte"\necho "3) Salir"\n', true), check: c => c.exe('menu.sh') },
+  { t: 'Cambia los permisos de <b>datos.sh</b> a <b>755</b>.', cmd: 'chmod', sol: 'chmod 755 datos.sh', pista: 'chmod también acepta permisos en números.', setup: s => s.file('~/datos.sh', '#!/bin/bash\necho datos\n'), check: c => c.mode('~/datos.sh') === '755' },
+  { t: 'Muestra el contenido de <b>/etc/shadow</b>. Solo lo puede leer el administrador.', cmd: 'cat', sol: 'sudo cat /etc/shadow', pista: 'Antepón el comando que da privilegios de administrador.', check: c => c.ran('cat', a => has(a, /^\/etc\/shadow$/)) },
+  { t: '¿Con qué usuario estás conectado? Usa el comando que lo muestra.', cmd: 'whoami', sol: 'whoami', pista: 'En inglés sería "¿quién soy yo?".', check: c => c.ran(['whoami', 'id']) },
+
+  // ---- Paquetes ----
+  { t: 'Actualiza la lista de paquetes disponibles.', cmd: 'apt', sol: 'sudo apt update', pista: 'Es apt con la orden update, y necesita administrador.', check: c => c.apt('update') },
+  { t: 'Instala el paquete <b>nmap</b> desde los repositorios.', cmd: 'apt', sol: 'sudo apt install nmap', pista: 'apt install + nombre del paquete, como administrador.', setup: s => s.unpkg('nmap'), check: c => c.has('nmap') },
+  { t: '¿Cómo instalas el paquete <b>htop</b>? Hazlo.', cmd: 'apt', sol: 'sudo apt install htop', pista: 'Igual que cualquier paquete con apt.', setup: s => s.unpkg('htop'), check: c => c.has('htop') },
+  { t: 'Instala <b>git</b>.', cmd: 'apt', sol: 'sudo apt install git', pista: 'apt install, con sudo.', setup: s => s.unpkg('git'), check: c => c.has('git') },
+  { t: 'Actualiza la lista de paquetes e instala <b>curl</b> (dos comandos).', cmd: 'apt', pasos: 2, sol: 'sudo apt update && sudo apt install curl', pista: 'Primero update y después install.', setup: s => s.unpkg('curl'), check: c => c.apt('update') && c.has('curl') },
+  { t: 'Instala <b>Zenity</b>.', cmd: 'apt', sol: 'sudo apt install zenity', pista: 'Zenity se instala con apt como cualquier paquete.', setup: s => s.unpkg('zenity'), check: c => c.has('zenity') },
+  { t: 'Instala <b>tree</b> sin que te pregunte "¿Desea continuar?".', cmd: 'apt', sol: 'sudo apt install -y tree', pista: 'apt tiene una opción para responder "sí" automáticamente.', setup: s => s.unpkg('tree'), check: c => c.has('tree') && c.ran(['apt', 'apt-get'], a => a.includes('-y') || a.includes('--yes')) },
+
+  // ---- Red ----
+  { t: 'Muestra tus interfaces de red y tu dirección IP.', cmd: 'ip', sol: 'ip a', pista: 'Comando ip con la orden de direcciones (address).', check: c => c.ran('ip', a => /^(a|addr|address)$/.test(a[0] || '')) },
+  { t: 'Comprueba si tienes conexión con <b>google.com</b>.', cmd: 'ping', sol: 'ping -c 4 google.com', pista: 'Hay un comando que envía paquetes a otro host para ver si responde.', check: c => c.ran('ping', a => has(a, /^google\.com$/i)) },
+  { t: 'Haz ping a <b>8.8.8.8</b> solo <b>4 veces</b>.', cmd: 'ping', sol: 'ping -c 4 8.8.8.8', pista: 'ping tiene una opción para indicar la cantidad (count).', check: c => c.ran('ping', (a, l) => has(a, /^8\.8\.8\.8$/) && /-c\s*4\b/.test(l.cmd)) },
+  { t: 'Comprueba si el router de VirtualBox (<b>10.0.2.2</b>) responde, haciendo solo <b>3 pings</b>.', cmd: 'ping', sol: 'ping -c 3 10.0.2.2', pista: 'ping con la opción de cantidad.', check: c => c.ran('ping', (a, l) => has(a, /^10\.0\.2\.2$/) && /-c\s*3\b/.test(l.cmd)) },
+
+  // ---- Zenity ----
+  { t: 'Verifica qué versión de <b>Zenity</b> tienes instalada.', cmd: 'zenity', sol: 'zenity --version', pista: 'Casi todos los programas aceptan la opción --version.', setup: s => { s.pkg('zenity'); s.note('📦 Zenity ya está instalado para esta tarea.'); }, check: c => c.ran('zenity', a => a.includes('--version')) },
+  { t: 'Muestra un cuadro de <b>información</b> con Zenity que diga <b>Prueba</b>.', cmd: 'zenity', sol: 'zenity --info --text="Prueba"', pista: 'Usa --info y --text="...".', setup: s => s.pkg('zenity'), check: c => c.zen('info', /prueba/i) },
+  { t: 'Muestra un cuadro de información con Zenity que diga <b>Escaneo terminado</b>.', cmd: 'zenity', sol: 'zenity --info --text="Escaneo terminado"', pista: 'Si el texto tiene espacios, ponlo entre comillas.', setup: s => s.pkg('zenity'), check: c => c.zen('info', /escaneo terminado/i) },
+  { t: 'Muestra un cuadro de <b>error</b> con Zenity que diga <b>No hay conexión</b>.', cmd: 'zenity', sol: 'zenity --error --text="No hay conexión"', pista: 'El tipo de cuadro es --error.', setup: s => s.pkg('zenity'), check: c => c.zen('error', /no hay conexi[oó]n/i) },
+  { t: 'Muestra una <b>advertencia</b> con Zenity que diga <b>Espacio bajo en disco</b>.', cmd: 'zenity', sol: 'zenity --warning --text="Espacio bajo en disco"', pista: 'Advertencia en inglés es "warning".', setup: s => s.pkg('zenity'), check: c => c.zen('warning', /espacio bajo/i) },
+  { t: 'Muestra una pregunta <b>Sí/No</b> con Zenity que diga <b>¿Deseas continuar?</b>', cmd: 'zenity', sol: 'zenity --question --text="¿Deseas continuar?"', pista: 'El tipo de cuadro es --question.', setup: s => s.pkg('zenity'), check: c => c.zen('question', /continuar/i) },
+  { t: 'Pide al usuario que <b>escriba su nombre</b> con Zenity.', cmd: 'zenity', sol: 'zenity --entry --text="Escribe tu nombre"', pista: 'El cuadro para escribir texto es --entry.', setup: s => s.pkg('zenity'), check: c => c.zen('entry') },
+  { t: 'Muestra un <b>calendario</b> con Zenity.', cmd: 'zenity', sol: 'zenity --calendar', pista: 'Calendario en inglés: calendar.', setup: s => s.pkg('zenity'), check: c => c.zen('calendar') },
+  { t: 'Abre una ventana de Zenity para <b>seleccionar un archivo</b>.', cmd: 'zenity', sol: 'zenity --file-selection', pista: 'La opción es --file-selection.', setup: s => s.pkg('zenity'), check: c => c.zen('file-selection') },
+  { t: 'Muestra con Zenity una <b>lista</b> con la columna <b>Opciones</b> y los elementos <b>Escanear</b>, <b>Reporte</b> y <b>Salir</b>.', cmd: 'zenity', sol: 'zenity --list --column="Opciones" Escanear Reporte Salir', pista: 'Usa --list, --column="..." y después los elementos separados por espacios.', setup: s => s.pkg('zenity'), check: c => c.zen('list', /escanear.*reporte.*salir/i) },
+  { t: 'Muestra una <b>barra de progreso</b> con Zenity.', cmd: 'zenity', sol: 'zenity --progress', pista: 'Progreso en inglés: progress.', setup: s => s.pkg('zenity'), check: c => c.zen('progress') },
+
+  // ---- Combinadas ----
+  { t: 'Crea la carpeta <b>proyecto</b>, entra en ella y crea el archivo <b>main.sh</b>.', cmd: 'mkdir', pasos: 3, sol: 'mkdir proyecto && cd proyecto && touch main.sh', pista: 'Son tres comandos: crear carpeta, entrar, crear archivo.', setup: s => s.rm('~/proyecto'), check: c => c.file('~/proyecto/main.sh') && c.cwd() === HOME + '/proyecto' },
+  { t: 'Crea el archivo <b>hola.sh</b> y dale permiso de ejecución.', cmd: 'touch', pasos: 2, sol: 'touch hola.sh && chmod +x hola.sh', pista: 'Primero créalo vacío y luego cambia sus permisos.', setup: s => s.rm('~/hola.sh'), check: c => c.exec('~/hola.sh') },
+  { t: 'Actualiza la lista de paquetes, instala <b>Zenity</b> y verifica su versión.', cmd: 'apt', pasos: 3, sol: 'sudo apt update && sudo apt install zenity && zenity --version', pista: 'update → install → --version.', setup: s => s.unpkg('zenity'), check: c => c.apt('update') && c.has('zenity') && c.ran('zenity', a => a.includes('--version')) },
+  { t: 'Muestra tu IP y luego comprueba conexión con <b>kali.org</b> haciendo solo <b>2 pings</b>.', cmd: 'ip', pasos: 2, sol: 'ip a && ping -c 2 kali.org', pista: 'Primero el comando de red para ver la IP, luego ping con cantidad.', check: c => c.ran('ip', a => /^(a|addr|address)$/.test(a[0] || '')) && c.ran('ping', (a, l) => has(a, /kali\.org/i) && /-c\s*2\b/.test(l.cmd)) },
+  { t: 'Copia <b>reporte.txt</b> a <b>/tmp</b> y luego muestra su contenido desde ahí.', cmd: 'cp', pasos: 2, sol: 'cp reporte.txt /tmp && cat /tmp/reporte.txt', pista: 'Primero cp, después cat con la ruta nueva.', setup: s => { s.file('~/reporte.txt', REP); s.rm('/tmp/reporte.txt'); }, check: c => c.file('/tmp/reporte.txt') && c.ran('cat', a => has(a, /^\/tmp\/reporte\.txt$/)) },
+
+  // ---- Otros ----
+  { t: 'Muestra el <b>historial</b> de comandos que has escrito.', cmd: 'history', sol: 'history', pista: 'Historial en inglés.', check: c => c.ran('history') },
+  { t: '<b>Limpia</b> la pantalla de la terminal.', cmd: 'clear', sol: 'clear', pista: 'Limpiar en inglés (también funciona Ctrl+L, pero aquí escribe el comando).', check: c => c.ran('clear') },
+  { t: 'Muestra la información completa del sistema y del kernel.', cmd: 'uname', sol: 'uname -a', pista: 'Es uname con la opción de "todo".', check: c => c.ran('uname', a => a.includes('-a')) },
+];
+
+function updateScore() { if (!T.sOk) return; T.sOk.textContent = '✔ ' + state.score.ok; T.sBad.textContent = '✖ ' + state.score.bad; }
+function renderTask() {
+  const t = state.task; if (!T.taskTxt) return;
+  T.taskLbl.replaceChildren(document.createTextNode('Tarea ' + state.taskN), el('span', { class: 'badge', text: TAREAS.length + ' tareas' }));
+  T.taskTxt.innerHTML = t ? t.t : '—';
+}
+function pickLocal() {
+  if (!state.deck.length) state.deck = shuffle(TAREAS.map((_, i) => i));
+  return { ...TAREAS[state.deck.pop()], src: 'local' };
+}
+async function nextTask() {
+  state.attempts = 0; state.taskLog = [];
+  const t = pickLocal();
+  state.task = t; state.taskN++;
+  const notes = [];
+  if (t.src === 'local') {
+    const s = S(notes);
+    if (!t.keepCwd && state.cwd !== HOME) { s.cd('~'); notes.push('📍 Te regresé a tu carpeta personal (~).'); }
+    if (t.setup) t.setup(s);
+  }
+  renderTask();
+  profeMsg(`👩‍🏫 <b>Tarea ${state.taskN}:</b> ${t.t}`);
+  notes.forEach(n => block(n, 'line dim'));
+}
+async function aprobar(msg) {
+  state.score.ok++; updateScore();
+  block('✅ ' + (msg || rand(['¡Correcto!', 'Correcto, así se hace.', 'Bien hecho.', 'Exacto.'])), 'verdict ok');
+  await sleep(650);
+  await nextTask();
+}
+function fallar(comentario) {
+  const t = state.task; state.attempts++; state.score.bad++; updateScore();
+  block('❌ ' + (comentario || 'No es correcto.'), 'verdict err');
+  if (state.attempts === 1 && t.src === 'local') block('💡 Pista: ' + t.pista, 'verdict hint');
+  if (state.attempts >= 2 && t.sol) block('🔑 Una forma correcta: ' + t.sol, 'verdict hint');
+  block('Inténtalo otra vez, o escribe «pista» o «saltar».', 'line dim');
+}
+async function evaluar(lastName, lastCode) {
+  const t = state.task; if (!t) return;
+  {
+    const c = C();
+    if (t.check(c)) return aprobar();
+    if (NEUTRAL.has(lastName) && lastName !== t.cmd) return;
+    if (t.pasos > 1 && lastCode === 0 && c.okCount() < t.pasos && new RegExp('(^|[\\s&;])' + lastName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(t.sol)) { block('↪ Bien, sigue con el siguiente paso.', 'verdict info'); return; }
+    let msg = lastCode !== 0 && lastCode !== 130 ? 'El comando dio error; lee el mensaje de la terminal.' : 'Eso no cumple la tarea.';
+    if (state.cwd !== HOME && !t.keepCwd && !/cd/.test(t.sol)) msg += ` Ojo: estás en ${pretty(state.cwd)}, no en ~.`;
+    return fallar(msg);
+  }
+}
+
+const LIBRE_MSG = 'Estás en la terminal libre. Para hacer tareas con la profe abre «Práctica» (icono del escritorio).';
+const META = {
+  async tarea() { if (state.mode !== 'practica') return note(LIBRE_MSG); if (state.task) profeMsg(`👩‍🏫 <b>Tarea ${state.taskN}:</b> ${state.task.t}`); },
+  async profe() { return META.tarea(); },
+  async pista() { if (state.mode !== 'practica') return note(LIBRE_MSG); if (state.task) block('💡 Pista: ' + state.task.pista, 'verdict hint'); },
+  async saltar() { if (state.mode !== 'practica') return note(LIBRE_MSG); if (!state.task) return; state.score.skip++; block('⏭ Una forma correcta era: ' + state.task.sol, 'verdict hint'); await sleep(500); await nextTask(); },
+  async puntaje() { block(`📊 Aciertos: ${state.score.ok} · Errores: ${state.score.bad} · Saltadas: ${state.score.skip}`, 'verdict info'); },
+  async reiniciar() { state.fs = makeFS(); state.cwd = HOME; state.installed = new Set(BASE_PKGS); state.sudoOK = false; state.vars = {}; renderPrompt(); block('🔄 Archivos y paquetes reiniciados como al inicio.', 'verdict info'); },
+};
+async function metaFromButton(name) {
+  if (state.busy || state.ask) { toast('Espera a que termine el comando (o usa Ctrl+C)'); return; }
+  state.busy = true; renderInputMode();
+  echoCommand(name);
+  try { await META[name](); } finally { state.busy = false; renderInputMode(); focusInput(); }
+}
+
+/* =====================================================================
+   VENTANAS
+   ===================================================================== */
+const WM = {
+  wins: {}, z: 10, cascade: 0,
+  open(id, { title, icon, w = 760, h = 500, build, onClose, onOpen }) {
+    if (this.wins[id]) { this.wins[id].el.classList.remove('min'); this.focus(id); return this.wins[id]; }
+    const host = $('#windows'), hb = host.getBoundingClientRect();
+    w = Math.min(w, hb.width - 24); h = Math.min(h, hb.height - 100);
+    const off = (this.cascade++ % 5) * 28;
+    const x = Math.max(8, (hb.width - w) / 2 - 60 + off + (hb.width > 1100 ? 80 : 0)), y = Math.max(10, (hb.height - h) / 2 - 40 + off);
+    const svg = p => `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">${p}</svg>`;
+    const tEl = el('span', { class: 't', text: title });
+    const bMin = el('button', { class: 'wbtn', 'aria-label': 'Minimizar', html: svg('<path d="M3.5 8.5h9"/>') });
+    const bMax = el('button', { class: 'wbtn max-b', 'aria-label': 'Maximizar', html: svg('<rect x="3.5" y="3.5" width="9" height="9" rx="1.5"/>') });
+    const bClose = el('button', { class: 'wbtn close', 'aria-label': 'Cerrar', html: svg('<path d="M4 4l8 8M12 4l-8 8"/>') });
+    const ic = el('span', { class: 'wi ic', 'data-ic': icon });
+    const bar = el('div', { class: 'win-title' }, ic, tEl, bMin, bMax, bClose);
+    const body = el('div', { class: 'win-body' });
+    const win = el('div', { class: 'win', role: 'dialog', 'aria-label': title }, bar, body);
+    win.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px`;
+    host.append(win); paintIcons(win);
+    const rec = this.wins[id] = { el: win, onClose, setTitle: s => { tEl.textContent = s; }, setIcon: k => { ic.dataset.ic = k; ic.innerHTML = ICONS[k] || ''; } };
+    build(body, win);
+    bMin.onclick = () => { win.classList.add('min'); this.dock(); };
+    bMax.onclick = () => win.classList.toggle('max');
+    bClose.onclick = () => this.close(id);
+    bar.addEventListener('dblclick', e => { if (!e.target.closest('.wbtn') && !isMobile()) win.classList.toggle('max'); });
+    win.addEventListener('pointerdown', () => this.focus(id), true);
+    bar.addEventListener('pointerdown', e => {
+      if (e.target.closest('.wbtn') || isMobile() || win.classList.contains('max') || e.button !== 0) return;
+      const r = win.getBoundingClientRect(), pr = host.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+      bar.setPointerCapture(e.pointerId);
+      const mv = ev => { win.style.left = Math.max(-r.width + 90, Math.min(ev.clientX - pr.left - ox, pr.width - 90)) + 'px'; win.style.top = Math.max(0, Math.min(ev.clientY - pr.top - oy, pr.height - 40)) + 'px'; };
+      const up = () => { bar.removeEventListener('pointermove', mv); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up); };
+      bar.addEventListener('pointermove', mv); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
+    });
+    this.focus(id); this.dock();
+    if (onOpen) onOpen(rec);
+    return rec;
+  },
+  focus(id) { const w = this.wins[id]; if (!w) return; if (id === 'term' || id === 'prac') { if (!activate(id === 'prac' ? 'practica' : 'libre')) return; } Object.values(this.wins).forEach(x => x.el.classList.remove('focused')); w.el.classList.add('focused'); w.el.style.zIndex = ++this.z; this.top = id; },
+  close(id) { const w = this.wins[id]; if (!w) return; if (w.onClose) w.onClose(); w.el.remove(); delete this.wins[id]; this.dock(); },
+  dock() { $$('.dk').forEach(b => b.classList.toggle('open', !!this.wins[b.dataset.dock])); },
+};
+
+function termTitle() { return (state.mode === 'practica' ? 'Práctica — ' : '') + 'kali@kali: ' + pretty(state.cwd); }
+function openTerminal(mode = 'libre') {
+  if (!activate(mode)) { const w = WM.wins[SES[mode].win]; if (w) { w.el.classList.remove('min'); } return; }
+  const ses = cur;
+  WM.open(ses.win, {
+    title: termTitle(), icon: mode === 'practica' ? 'prac' : 'term', w: 880, h: 560,
+    build: body => { if (!ses.root) { ses.root = buildTerminal(); if (mode === 'libre') T.bar.style.display = 'none'; } body.append(ses.root); },
+  });
+  renderPrompt(); WM.dock(); setTimeout(focusInput, 80);
+  if (!ses.started && !state.busy) { ses.started = true; mode === 'practica' ? startPractice() : startFree(); }
+}
+function banner(sub) {
+  out('');
+  outParts([{ t: '  ██ ', c: 'pu' }, { t: 'KALI LAB · PROG. VI', c: 'head' }]);
+  outParts([{ t: '  ██ ', c: 'pu' }, { t: sub, c: 'dim' }]);
+  out('');
+}
+async function startFree() {
+  banner('Terminal libre · simulador de Kali Linux');
+  note('Aquí no hay tareas: practica lo que quieras o sigue el tutorial en PDF. Esta terminal es independiente de «Práctica».');
+  note('Escribe «ayuda» para ver los comandos disponibles. Tab autocompleta · ↑ ↓ historial · Ctrl+C detiene.');
+}
+async function startPractice() {
+  banner('Práctica con la profe · ' + TAREAS.length + ' tareas al azar');
+  note('La profe te pide algo → escribe el comando → presiona Enter → te dice si está bien.');
+  note('Comandos de la práctica: tarea · pista · saltar · puntaje · reiniciar · ayuda');
+  state.busy = true; renderInputMode();
+  try { await nextTask(); } finally { state.busy = false; renderInputMode(); focusInput(); }
+}
+
+function buildEditor(body, { text, readonly, path, sudo }) {
+  const st = state;
+  const root = el('div', { class: 'editor' });
+  const gutter = el('div', { class: 'gutter' });
+  let area;
+  const status = el('span', { text: readonly ? 'Solo lectura' : 'Editando' });
+  const saveBtn = readonly ? null : el('button', { text: '💾 Guardar', onclick: save });
+  let fs = parseFloat(store.get('ed_fs')) || (isMobile() ? 12.5 : 13.5);
+  const setFs = v => { fs = Math.max(10, Math.min(20, v)); root.style.setProperty('--edfs', fs + 'px'); store.set('ed_fs', fs); };
+  const menu = el('div', { class: 'menubar' },
+    ...['Archivo', 'Editar', 'Buscar', 'Ver', 'Documento', 'Ayuda'].map(m => el('span', { text: m, class: 'tb-hide-m' })),
+    el('span', { class: 'sp' }),
+    el('button', { text: 'A−', title: 'Letra más pequeña', onclick: () => setFs(fs - 1) }),
+    el('button', { text: 'A+', title: 'Letra más grande', onclick: () => setFs(fs + 1) }),
+    saveBtn);
+  if (readonly) area = el('pre', { class: 'edtext', text });
+  else { area = el('textarea', { class: 'edtext', spellcheck: 'false' }); area.value = text; }
+  const wrap = el('div', { class: 'edwrap' }, gutter, area);
+  const lines = () => { const n = (readonly ? text : area.value).split('\n').length; gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n'); if (!readonly) { area.style.height = 'auto'; area.style.height = area.scrollHeight + 'px'; } };
+  if (!readonly) area.addEventListener('input', () => { lines(); status.textContent = 'Modificado (sin guardar)'; });
+  if (!readonly) area.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } });
+  function save() { const prev = state; state = st; try { save2(); } finally { state = prev; } }
+  function save2() {
+    const [pa, nm] = splitPath(path), p = getNode(pa);
+    if (!p || p.t !== 'd') { toast('No existe la carpeta ' + pretty(pa)); return; }
+    if (needsRoot(pa) && !sudo) { toast('Permission denied: abre el editor con sudo (sudo nano ' + pretty(path) + ')'); return; }
+    if (p.c[nm]) p.c[nm].d = area.value; else p.c[nm] = F(area.value);
+    status.textContent = 'Guardado ✔'; toast('Guardado: ' + pretty(path));
+  }
+  root.append(menu, wrap, el('div', { class: 'status' }, status, el('span', { text: 'UTF-8 · ' + (readonly ? 'Texto plano' : pretty(path)) })));
+  body.append(root); setFs(fs); setTimeout(lines, 0);
+  if (!readonly) setTimeout(() => area.focus(), 80);
+}
+function openComandos() { WM.open('txt', { title: 'comandos.txt — Mousepad', icon: 'txt', w: 640, h: 600, build: b => buildEditor(b, { text: COMANDOS_TXT, readonly: true }) }); }
+function openEditor(abs, sudo) {
+  const n = getNode(abs);
+  WM.open('ed:' + abs, { title: splitPath(abs)[1] + ' — ' + (sudo ? 'nano (root)' : 'nano'), icon: 'txt', w: 620, h: 440, build: b => buildEditor(b, { text: n ? n.d : '', readonly: false, path: abs, sudo }), onClose: () => setTimeout(() => { if (WM.wins[cur.win]) focusInput(); }, 50) });
+}
+const APPS = { term: () => openTerminal('libre'), prac: () => openTerminal('practica'), txt: openComandos };
+
+
+/* =====================================================================
+   ARRANQUE
+   ===================================================================== */
+paintIcons();
+const menu = $('#appmenu'), btnMenu = $('#btnMenu');
+const closeMenu = () => { menu.classList.remove('open'); btnMenu.setAttribute('aria-expanded', 'false'); };
+btnMenu.addEventListener('click', e => { e.stopPropagation(); const o = !menu.classList.contains('open'); menu.classList.toggle('open', o); btnMenu.setAttribute('aria-expanded', String(o)); });
+document.addEventListener('click', e => {
+  const op = e.target.closest('[data-open]'); if (op) { closeMenu(); APPS[op.dataset.open](); return; }
+  const dk = e.target.closest('[data-dock]');
+  if (dk) {
+    const id = dk.dataset.dock;
+    const w = WM.wins[id], isTerm = id === 'term' || id === 'prac';
+    if (!w) APPS[id]();
+    else if (w.el.classList.contains('min')) { if (isTerm) APPS[id](); else { w.el.classList.remove('min'); WM.focus(id); } }
+    else if (WM.top === id) { w.el.classList.add('min'); }
+    else if (isTerm) APPS[id]();
+    else WM.focus(id);
+    return;
+  }
+  if (!e.target.closest('#appmenu')) closeMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.altKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); openTerminal('libre'); }
+  if (e.key === 'Escape') closeMenu();
+});
+const tick = () => { const d = new Date(); $('#clock').textContent = d.toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/\./g, '') + '  ' + d.toTimeString().slice(0, 5); };
+tick(); setInterval(tick, 15000);
+setTimeout(() => { if (!WM.wins.term) toast('👋 «Práctica» = tareas con la profe · «Terminal» = consola libre para practicar', 6000); }, 700);
+
+// Para pruebas automáticas
+window.__kali = { get state() { return state; }, SES, runLine, CMDS, TAREAS, openTerminal, nextTask, renderInputMode };
+})();
+</script>
+</body>
+</html>
